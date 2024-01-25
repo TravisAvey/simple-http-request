@@ -1,5 +1,6 @@
 # Simple HTTP Request
 
+This is a simple library that will perform simple HTTP requests
 
 
 ## Getting started
