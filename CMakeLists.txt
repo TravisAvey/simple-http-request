@@ -2,13 +2,16 @@ cmake_minimum_required(VERSION 3.28)
 
 set(CMAKE_C_STANDARD 11)
 
-project(simpleHTTPrequest)
+project(simpleHTTPRequest VERSION 0.0.1)
 
 find_package(CURL REQUIRED)
+add_library(httprequest STATIC src/request.c)
+target_include_directories(httprequest
+                           PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/include)
 
-set(HEADERS "include/request.h")
-set(SOURCES "src/request.c")
+add_executable(simpleHTTPRequest test/tests.c)
 
-target_link_libraries(simpleHTTPrequest PUBLIC CURL::libcurl)
+target_include_directories(simpleHTTPRequest PUBLIC ${CURL_INCLUDE_DIRS})
 
-# add_subdirectory(src)
+# may need to add ${CURL_DEPENDENCIES} if required
+target_link_libraries(simpleHTTPRequest PUBLIC httprequest ${CURL_LIBRARIES})
