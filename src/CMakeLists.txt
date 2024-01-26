@@ -1,5 +1,8 @@
-function(simplerequest)
-  add_library(simple-http-request request.c)
-  target_link_libraries(simple-http-request PUBLIC curl)
+find_package(CURL REQUIRED)
 
-endfunction()
+add_library(httprequest STATIC request.c)
+
+target_link_libraries(httprequest PUBLIC header curl)
+
+add_library(header INTERFACE)
+target_include_directories(header INTERFACE ${CMAKE_SOURCE_DIR}/include)
