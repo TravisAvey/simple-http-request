@@ -2,12 +2,6 @@
 #define __REQUEST_H__
 
 #include <curl/curl.h>
-/*
- *  request.h
- *
- *  Basic Usage for GET, POST, PUT, PATCH, DELETE
- *
- */
 
 typedef struct {
   CURL *curl;
@@ -16,11 +10,12 @@ typedef struct {
   char *text;
 } request;
 
-// initialize the library
-// returns 0 on success, -1 if fail
+// initializes the simple http request library
+// returns 0 on success, -1 of fail
 int init(request *);
 
-// close the libCURL interface
+// close and clean up the simple http request library
+// should be called when all requests are done
 void close(request *);
 
 #endif

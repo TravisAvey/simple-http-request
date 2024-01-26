@@ -1,16 +1,14 @@
-/*
- *
- * request.c
- *
- *
- */
-
 #include "../include/request.h"
+#include <curl/curl.h>
 #include <stdlib.h>
 
-// init the libCURL
-// if failed returns -1
-// success: 0
+/*
+ * init - intializes the simple http request library
+ *
+ * @req the request struct
+ *
+ * returns 0 on success, -1 of fail
+ */
 int init(request *req) {
   req->url = NULL;
   req->text = NULL;
@@ -27,11 +25,27 @@ int init(request *req) {
   }
 
   curl_global_init(CURL_GLOBAL_DEFAULT);
+
   req->curl = curl_easy_init();
-  if (req->curl) {
-    return 0;
+  if (req->curl == NULL) {
+    free(req->url);
+    free(req->text);
+    curl_global_cleanup();
+    return -1;
   }
-  return -1;
+  return 0;
 }
 
-void close(request *req) { curl_easy_cleanup(req->curl); }
+/*
+ * close - closes and cleans up the http simple request library
+ *
+ * @req the request struct
+ */
+void close(request *req) {
+  free(req->url);
+  free(req->text);
+
+  curl_easy_cleanup(req->curl);
+
+  curl_global_cleanup();
+}
