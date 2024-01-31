@@ -10,16 +10,12 @@
 int main(int argc, char *argv[]) {
 
   request req;
-  int ret = init(&req);
-  if (ret) {
-    printf("error initializing...\n");
-  } else {
-    printf("initialzing libcurl was a success\n");
-  }
+  simpleHttpInit();
+  req.url = "https://catfact.ninja/fact";
+  int res = simpleHttpgGet(&req);
+  printf("HTTP Response code: %ld\n", req.code);
+  printf("req->data: %s\n", req.text);
+  simpleHttpClose(&req);
 
-  // ...
-  printf("closing simple http request lib\n");
-  close(&req);
-  printf("http request lib closed\n");
   return 0;
 }
