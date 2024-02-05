@@ -10,7 +10,7 @@ int main(int argc, char *argv[]) {
   simpleHttpInit();
 
   request req;
-  simpleHttpClose(&req);
+  simpleHttpClose();
 
   return 0;
 }

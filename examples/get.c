@@ -12,10 +12,10 @@ int main(int argc, char *argv[]) {
   request req;
   simpleHttpInit();
   req.url = "https://catfact.ninja/fact";
-  int res = simpleHttpgGet(&req);
-  printf("HTTP Response code: %ld\n", req.code);
-  printf("req->data: %s\n", req.text);
-  simpleHttpClose(&req);
+  int res = simpleHttpGet(&req);
+  printf("HTTP Response code: %ld\n", req.httpCode);
+  printf("req->data: %s\n", req.responseText);
+  simpleHttpClose();
 
   return 0;
 }
