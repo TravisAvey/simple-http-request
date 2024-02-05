@@ -4,15 +4,14 @@
 #include <curl/curl.h>
 
 typedef struct request {
-  CURL *curl;         // The CURL object
-  char *url;          // The URL; where to send the request
-  char *text;         // The text data to be sent
-  char *file;         // absolute path to file to be sent (optional)
-  long httpCode;      // The response code (200, 400, 500, etc)
-  char *responseText; // The response data text
+  CURL *curl; // The CURL object
+  char *url;  // The URL; where to send the request
+  char *text; // The text data to be sent
+  long code;  // The response code (200, 400, 500, etc)
+  char *body; // The response body text
 } request;
 
-typedef enum { GET, POST, PUT, PATCH, DELETE } action;
+// Media Types for posting data
 typedef enum { CSV, JSON, HTML, TEXT, XML } mediaType;
 
 // struct to hold the response data
@@ -34,17 +33,17 @@ int simpleHttpInit();
 // should be called when all requests are done
 void simpleHttpClose();
 
-// callback that curl will call during a get request
-static size_t simpleHttpWriteCallback(void *, size_t, size_t, void *);
-
-// callback that curl will call during a send request (POST)
-static size_t simpleHttpReadCallback(char *, size_t, size_t, void *);
-
 // get request
 int simpleHttpGet(request *);
 
 // post request
 int simpleHttpPost(request *, mediaType);
+
+// callback that curl will call during a get request
+static size_t simpleHttpWriteCallback(void *, size_t, size_t, void *);
+
+// callback that curl will call during a send request (POST)
+static size_t simpleHttpReadCallback(char *, size_t, size_t, void *);
 
 // sets standard curl options
 void simpleHttpSetOpts(request *, response *);
@@ -52,6 +51,7 @@ void simpleHttpSetOpts(request *, response *);
 // saves the response text in the request object
 void simpleHttpStoreResponse(response *, request *);
 
+// sets the headers for a request
 void simpleHttpSetMediaHeaders(request *, mediaType, struct curl_slist *);
 
 #endif

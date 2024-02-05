@@ -13,8 +13,8 @@ int main(int argc, char *argv[]) {
   simpleHttpInit();
   req.url = "https://catfact.ninja/fact";
   int res = simpleHttpGet(&req);
-  printf("HTTP Response code: %ld\n", req.httpCode);
-  printf("req->data: %s\n", req.responseText);
+  printf("HTTP Response code: %ld\n", req.code);
+  printf("req->data: %s\n", req.body);
   simpleHttpClose();
 
   return 0;

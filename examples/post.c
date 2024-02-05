@@ -8,12 +8,12 @@ int main(int argc, char *argv[]) {
 
   // req.text = "some text for post";
   req.url = "https://httpbin.org/post";
-  req.text = "{ \"name\": \"james\"}";
+  req.text = "{ \"name\": \"Jim Halpert\"}";
 
   simpleHttpPost(&req, JSON);
 
-  printf("Response Code: %ld\n", req.httpCode);
-  printf("Response: %s\n", req.responseText);
+  printf("Response Code: %ld\n", req.code);
+  printf("Response: %s\n", req.body);
 
   simpleHttpClose();
   return 0;
