@@ -47,34 +47,12 @@ int simpleHttpGet(request *req) {
     printf("get request failed: %s\n", curl_easy_strerror(res));
     return -1;
   }
-  curl_easy_getinfo(req->curl, CURLINFO_RESPONSE_CODE, &req->httpCode);
+  curl_easy_getinfo(req->curl, CURLINFO_RESPONSE_CODE, &req->code);
   curl_easy_cleanup(req->curl);
 
   simpleHttpStoreResponse(&chunk, req);
 
   return 0;
-}
-
-/*
- *  The callback for receiving data from a request
- */
-size_t simpleHttpWriteCallback(void *content, size_t size, size_t nmeb,
-                               void *userdata) {
-  size_t actualSize = size * nmeb;
-  struct response *mem = (struct response *)userdata;
-
-  char *ptr = realloc(mem->data, mem->size + actualSize + 1);
-
-  if (!ptr) {
-    printf("Not enough memory to allocate for the callback\n");
-    return 0;
-  }
-  mem->data = ptr;
-  memcpy(&(mem->data[mem->size]), content, actualSize);
-  mem->size += actualSize;
-  mem->data[mem->size] = 0;
-
-  return actualSize;
 }
 
 /*
@@ -117,7 +95,7 @@ int simpleHttpPost(request *req, mediaType type) {
     printf("post request failed: %s\n", curl_easy_strerror(res));
     return -1;
   }
-  curl_easy_getinfo(req->curl, CURLINFO_RESPONSE_CODE, &req->httpCode);
+  curl_easy_getinfo(req->curl, CURLINFO_RESPONSE_CODE, &req->code);
 
   simpleHttpStoreResponse(&chunk, req);
 
@@ -126,6 +104,28 @@ int simpleHttpPost(request *req, mediaType type) {
   curl_slist_free_all(headers);
   headers = NULL;
   return 0;
+}
+
+/*
+ *  The callback for receiving data from a request
+ */
+size_t simpleHttpWriteCallback(void *content, size_t size, size_t nmeb,
+                               void *userdata) {
+  size_t actualSize = size * nmeb;
+  struct response *mem = (struct response *)userdata;
+
+  char *ptr = realloc(mem->data, mem->size + actualSize + 1);
+
+  if (!ptr) {
+    printf("Not enough memory to allocate for the callback\n");
+    return 0;
+  }
+  mem->data = ptr;
+  memcpy(&(mem->data[mem->size]), content, actualSize);
+  mem->size += actualSize;
+  mem->data[mem->size] = 0;
+
+  return actualSize;
 }
 
 /*
@@ -191,8 +191,8 @@ void simpleHttpSetOpts(request *req, response *chunk) {
  *  @req the request object
  */
 void simpleHttpStoreResponse(response *chunk, request *req) {
-  req->responseText = malloc(strlen(chunk->data) + 1);
-  strcpy(req->responseText, chunk->data);
+  req->body = malloc(strlen(chunk->data) + 1);
+  strcpy(req->body, chunk->data);
   free(chunk->data);
 }
 
