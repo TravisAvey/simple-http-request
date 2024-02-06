@@ -11,7 +11,7 @@ int main(int argc, char *argv[]) {
   // data to update
   req.text = "{ \"name\": \"Jim Halpert\"}";
 
-  simpleHttpPatch(&req, JSON);
+  simpleHttpRequest(&req, JSON, PATCH);
 
   printf("Response Code: %ld\n", req.code);
   printf("Response: %s\n", req.body);

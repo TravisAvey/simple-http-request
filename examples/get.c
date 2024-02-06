@@ -12,7 +12,7 @@ int main(int argc, char *argv[]) {
   request req;
   simpleHttpInit();
   req.url = "https://catfact.ninja/fact";
-  int res = simpleHttpGet(&req);
+  int res = simpleHttpRequest(&req, JSON, GET);
   printf("HTTP Response code: %ld\n", req.code);
   printf("req->data: %s\n", req.body);
   simpleHttpClose();

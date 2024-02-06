@@ -12,7 +12,7 @@ int main(int argc, char *argv[]) {
   // data to update
   req.text = "{ \"name\": \"Jim Halpert\"}";
 
-  simpleHttpPut(&req, JSON);
+  simpleHttpRequest(&req, JSON, PUT);
 
   printf("Response Code: %ld\n", req.code);
   printf("Response: %s\n", req.body);
