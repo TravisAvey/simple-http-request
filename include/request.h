@@ -39,6 +39,9 @@ int simpleHttpGet(request *);
 // post request
 int simpleHttpPost(request *, mediaType);
 
+// delete request
+int simpleHttpDelete(request *, mediaType);
+
 // callback that curl will call during a get request
 static size_t simpleHttpWriteCallback(void *, size_t, size_t, void *);
 

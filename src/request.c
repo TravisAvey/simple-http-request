@@ -48,9 +48,10 @@ int simpleHttpGet(request *req) {
     return -1;
   }
   curl_easy_getinfo(req->curl, CURLINFO_RESPONSE_CODE, &req->code);
-  curl_easy_cleanup(req->curl);
-
   simpleHttpStoreResponse(&chunk, req);
+
+  curl_easy_cleanup(req->curl);
+  req->curl = NULL;
 
   return 0;
 }
@@ -103,6 +104,48 @@ int simpleHttpPost(request *req, mediaType type) {
   req->curl = NULL;
   curl_slist_free_all(headers);
   headers = NULL;
+  return 0;
+}
+
+/*
+ *  Sends a DELETE request
+ *
+ *  @req the request object
+ *  @type the media type to set for the headers
+ *      for expected return (JSON for example)
+ *
+ *  @return 0 on success; -1 on failure
+ */
+int simpleHttpDelete(request *req, mediaType type) {
+
+  req->curl = curl_easy_init();
+  if (req->curl == NULL) {
+    printf("Error initializing library\n");
+    return -1;
+  }
+  struct response chunk = {0};
+
+  struct curl_slist *headers = NULL;
+  simpleHttpSetMediaHeaders(req, type, headers);
+
+  curl_easy_setopt(req->curl, CURLOPT_CUSTOMREQUEST, "DELETE");
+
+  simpleHttpSetOpts(req, &chunk);
+
+  CURLcode res = curl_easy_perform(req->curl);
+
+  if (res != CURLE_OK) {
+    printf("delete request failed: %s\n", curl_easy_strerror(res));
+    return -1;
+  }
+  curl_easy_getinfo(req->curl, CURLINFO_RESPONSE_CODE, &req->code);
+  simpleHttpStoreResponse(&chunk, req);
+
+  curl_easy_cleanup(req->curl);
+  req->curl = NULL;
+  curl_slist_free_all(headers);
+  headers = NULL;
+
   return 0;
 }
 
@@ -199,7 +242,11 @@ void simpleHttpStoreResponse(response *chunk, request *req) {
 void simpleHttpSetMediaHeaders(request *req, mediaType type,
                                struct curl_slist *headers) {
 
-  curl_easy_setopt(req->curl, CURLOPT_POSTFIELDS, req->text);
+  // check if request.text contains data
+  // if not, setting headers for return type
+  if (req->text)
+    curl_easy_setopt(req->curl, CURLOPT_POSTFIELDS, req->text);
+
   headers = curl_slist_append(headers, "charset: utf-8");
 
   switch (type) {
