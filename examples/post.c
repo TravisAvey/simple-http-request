@@ -10,7 +10,7 @@ int main(int argc, char *argv[]) {
   req.url = "https://httpbin.org/post";
   req.text = "{ \"name\": \"Jim Halpert\"}";
 
-  simpleHttpPost(&req, JSON);
+  simpleHttpRequest(&req, JSON, POST);
 
   printf("Response Code: %ld\n", req.code);
   printf("Response: %s\n", req.body);

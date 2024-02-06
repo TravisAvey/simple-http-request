@@ -7,7 +7,8 @@
 #include <string.h>
 
 /*
- * init - intializes the simple http request library
+ * intializes the simple http request library
+ *  This is required to be called before using
  *
  * returns 0 on success; -1 on fail
  */
@@ -21,73 +22,61 @@ int simpleHttpInit() {
 }
 
 /*
- * close - closes and cleans up the http simple request library
+ * closes and cleans up the http simple request library
+ *  Call this when done using the library
  */
 void simpleHttpClose() { curl_global_cleanup(); }
 
 /*
- * get - inits curl and performs a GET request
+ *  Sends a HTTP Request.
  *
- *  @req the request struct object
+ *    Sending a Request:
+ *      request.url is required to send any request
+ *        - example: https://api.endpoint/
+ *      request.text should be filled in with data being sent, such
+ *      as JSON, text, etc to be sent (not required for GET/DELETE requests)
+ *
+ *    On successful response from the server:
+ *      The request.code will be filled in with the server's response
+ *      such as 200, 404, etc
+ *      The request.body will be filled in the response body, such as
+ *      using GET to retreive JSON
+ *
+ *  @req the request object that has the URL and optional upload data
+ *  @type the Media Type expected (JSON, text, xml, etc)
+ *  @verb the HTTP request Method (GET, POST, PUT, PATCH, DELETE)
+ *
+ *  @return 0 success, -1 fail
+ *    Be sure to check the request.code and request.body for any issues
+ *    from the server
  */
-int simpleHttpGet(request *req) {
-
-  req->curl = curl_easy_init();
-  if (req->curl == NULL) {
-    printf("Error initializing library\n");
-    return -1;
-  }
-  struct response chunk = {0};
-
-  simpleHttpSetOpts(req, &chunk);
-
-  CURLcode res = curl_easy_perform(req->curl);
-
-  if (res != CURLE_OK) {
-    printf("get request failed: %s\n", curl_easy_strerror(res));
-    return -1;
-  }
-  curl_easy_getinfo(req->curl, CURLINFO_RESPONSE_CODE, &req->code);
-  simpleHttpStoreResponse(&chunk, req);
-
-  curl_easy_cleanup(req->curl);
-  req->curl = NULL;
-
-  return 0;
-}
-
-/*
- *  Sends a POST request
- *
- *  @req the request object.
- *    set the URL request.url
- *    the response will be saved
- *    in request.responseData
- *  @type the Media Type for the POST headers
- *
- *  @return 0 success and -1 fail
- */
-int simpleHttpPost(request *req, mediaType type) {
+int simpleHttpRequest(request *req, mediaType type, method verb) {
   req->curl = curl_easy_init();
 
   if (req->curl == NULL) {
     printf("Error initializing library");
     return -1;
   }
-
-  readBuffer buffer;
-  buffer.readPtr = req->text;
-  buffer.size = strlen(req->text);
-
-  struct response chunk = {0};
+  if (req->url == NULL) {
+    printf("A URL is required to send an HTTP Request\n");
+    return -1;
+  }
 
   struct curl_slist *headers = NULL;
   simpleHttpSetMediaHeaders(req, type, headers);
 
-  curl_easy_setopt(req->curl, CURLOPT_POST, 1L);
-  curl_easy_setopt(req->curl, CURLOPT_READFUNCTION, simpleHttpReadCallback);
-  curl_easy_setopt(req->curl, CURLOPT_READDATA, &buffer);
+  simpleHttpSetMethod(req, verb);
 
+  // only if patch, post, put..
+  if (verb != GET && verb != DELETE) {
+    readBuffer buffer;
+    buffer.readPtr = req->text;
+    buffer.size = strlen(req->text);
+    curl_easy_setopt(req->curl, CURLOPT_READFUNCTION, simpleHttpReadCallback);
+    curl_easy_setopt(req->curl, CURLOPT_READDATA, &buffer);
+  }
+
+  struct response chunk = {0};
   simpleHttpSetOpts(req, &chunk);
 
   CURLcode res = curl_easy_perform(req->curl);
@@ -98,145 +87,6 @@ int simpleHttpPost(request *req, mediaType type) {
   }
   curl_easy_getinfo(req->curl, CURLINFO_RESPONSE_CODE, &req->code);
 
-  simpleHttpStoreResponse(&chunk, req);
-
-  curl_easy_cleanup(req->curl);
-  req->curl = NULL;
-  curl_slist_free_all(headers);
-  headers = NULL;
-  return 0;
-}
-
-/*
- *  Sends a PUT request with data to update within the request object
- *
- *  @req the request object
- *  @type the Media Type for the headers
- *
- *  @return 0 success, -1 failed
- */
-int simpleHttpPut(request *req, mediaType type) {
-  req->curl = curl_easy_init();
-
-  if (req->curl == NULL) {
-    printf("Error initializing library");
-    return -1;
-  }
-
-  readBuffer buffer;
-  buffer.readPtr = req->text;
-  buffer.size = strlen(req->text);
-
-  struct response chunk = {0};
-
-  struct curl_slist *headers = NULL;
-  simpleHttpSetMediaHeaders(req, type, headers);
-
-  curl_easy_setopt(req->curl, CURLOPT_CUSTOMREQUEST, "PUT");
-  curl_easy_setopt(req->curl, CURLOPT_READFUNCTION, simpleHttpReadCallback);
-  curl_easy_setopt(req->curl, CURLOPT_READDATA, &buffer);
-
-  simpleHttpSetOpts(req, &chunk);
-
-  CURLcode res = curl_easy_perform(req->curl);
-
-  if (res != CURLE_OK) {
-    printf("post request failed: %s\n", curl_easy_strerror(res));
-    return -1;
-  }
-  curl_easy_getinfo(req->curl, CURLINFO_RESPONSE_CODE, &req->code);
-
-  simpleHttpStoreResponse(&chunk, req);
-
-  curl_easy_cleanup(req->curl);
-  req->curl = NULL;
-  curl_slist_free_all(headers);
-  headers = NULL;
-
-  return 0;
-}
-
-/*
- *  Sends a PATCH request with data to update within the request object
- *
- *  @req the request object
- *  @type the Media Type for the headers
- *
- *  @return 0 success, -1 failed
- */
-int simpleHttpPatch(request *req, mediaType type) {
-  req->curl = curl_easy_init();
-
-  if (req->curl == NULL) {
-    printf("Error initializing library");
-    return -1;
-  }
-
-  readBuffer buffer;
-  buffer.readPtr = req->text;
-  buffer.size = strlen(req->text);
-
-  struct response chunk = {0};
-
-  struct curl_slist *headers = NULL;
-  simpleHttpSetMediaHeaders(req, type, headers);
-
-  curl_easy_setopt(req->curl, CURLOPT_CUSTOMREQUEST, "PATCH");
-  curl_easy_setopt(req->curl, CURLOPT_READFUNCTION, simpleHttpReadCallback);
-  curl_easy_setopt(req->curl, CURLOPT_READDATA, &buffer);
-
-  simpleHttpSetOpts(req, &chunk);
-
-  CURLcode res = curl_easy_perform(req->curl);
-
-  if (res != CURLE_OK) {
-    printf("post request failed: %s\n", curl_easy_strerror(res));
-    return -1;
-  }
-  curl_easy_getinfo(req->curl, CURLINFO_RESPONSE_CODE, &req->code);
-
-  simpleHttpStoreResponse(&chunk, req);
-
-  curl_easy_cleanup(req->curl);
-  req->curl = NULL;
-  curl_slist_free_all(headers);
-  headers = NULL;
-
-  return 0;
-}
-
-/*
- *  Sends a DELETE request
- *
- *  @req the request object
- *  @type the media type to set for the headers
- *      for expected return (JSON for example)
- *
- *  @return 0 on success; -1 on failure
- */
-int simpleHttpDelete(request *req, mediaType type) {
-
-  req->curl = curl_easy_init();
-  if (req->curl == NULL) {
-    printf("Error initializing library\n");
-    return -1;
-  }
-  struct response chunk = {0};
-
-  struct curl_slist *headers = NULL;
-  simpleHttpSetMediaHeaders(req, type, headers);
-
-  curl_easy_setopt(req->curl, CURLOPT_CUSTOMREQUEST, "DELETE");
-
-  simpleHttpSetOpts(req, &chunk);
-
-  CURLcode res = curl_easy_perform(req->curl);
-
-  if (res != CURLE_OK) {
-    printf("delete request failed: %s\n", curl_easy_strerror(res));
-    return -1;
-  }
-  curl_easy_getinfo(req->curl, CURLINFO_RESPONSE_CODE, &req->code);
   simpleHttpStoreResponse(&chunk, req);
 
   curl_easy_cleanup(req->curl);
@@ -372,4 +222,18 @@ void simpleHttpSetMediaHeaders(request *req, mediaType type,
   }
 
   curl_easy_setopt(req->curl, CURLOPT_HTTPHEADER, headers);
+}
+
+/*
+ *   Sets the HTTP Method 'Verb' for the request
+ */
+void simpleHttpSetMethod(request *req, method verb) {
+  if (verb == POST)
+    curl_easy_setopt(req->curl, CURLOPT_POST, 1L);
+  else if (verb == PATCH)
+    curl_easy_setopt(req->curl, CURLOPT_CUSTOMREQUEST, "PATCH");
+  else if (verb == PUT)
+    curl_easy_setopt(req->curl, CURLOPT_CUSTOMREQUEST, "PUT");
+  else if (verb == DELETE)
+    curl_easy_setopt(req->curl, CURLOPT_CUSTOMREQUEST, "DELETE");
 }
