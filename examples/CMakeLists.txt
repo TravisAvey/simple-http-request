@@ -1,6 +1,8 @@
 add_executable(get get.c)
 add_executable(post post.c)
 add_executable(delete delete.c)
+add_executable(put put.c)
 target_link_libraries(get httprequest)
 target_link_libraries(post httprequest)
 target_link_libraries(delete httprequest)
+target_link_libraries(put httprequest)
