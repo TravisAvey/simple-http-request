@@ -42,6 +42,9 @@ int simpleHttpPost(request *, mediaType);
 // put request
 int simpleHttpPut(request *, mediaType);
 
+// patch request
+int simpleHttpPatch(request *, mediaType);
+
 // delete request
 int simpleHttpDelete(request *, mediaType);
 
