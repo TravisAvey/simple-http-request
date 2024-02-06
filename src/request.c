@@ -108,6 +108,55 @@ int simpleHttpPost(request *req, mediaType type) {
 }
 
 /*
+ *  Sends a PUT request with data to update within the request object
+ *
+ *  @req the request object
+ *  @type the Media Type for the headers
+ *
+ *  @return 0 success, -1 failed
+ */
+int simpleHttpPut(request *req, mediaType type) {
+  req->curl = curl_easy_init();
+
+  if (req->curl == NULL) {
+    printf("Error initializing library");
+    return -1;
+  }
+
+  readBuffer buffer;
+  buffer.readPtr = req->text;
+  buffer.size = strlen(req->text);
+
+  struct response chunk = {0};
+
+  struct curl_slist *headers = NULL;
+  simpleHttpSetMediaHeaders(req, type, headers);
+
+  curl_easy_setopt(req->curl, CURLOPT_CUSTOMREQUEST, "PUT");
+  curl_easy_setopt(req->curl, CURLOPT_READFUNCTION, simpleHttpReadCallback);
+  curl_easy_setopt(req->curl, CURLOPT_READDATA, &buffer);
+
+  simpleHttpSetOpts(req, &chunk);
+
+  CURLcode res = curl_easy_perform(req->curl);
+
+  if (res != CURLE_OK) {
+    printf("post request failed: %s\n", curl_easy_strerror(res));
+    return -1;
+  }
+  curl_easy_getinfo(req->curl, CURLINFO_RESPONSE_CODE, &req->code);
+
+  simpleHttpStoreResponse(&chunk, req);
+
+  curl_easy_cleanup(req->curl);
+  req->curl = NULL;
+  curl_slist_free_all(headers);
+  headers = NULL;
+
+  return 0;
+}
+
+/*
  *  Sends a DELETE request
  *
  *  @req the request object

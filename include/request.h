@@ -39,6 +39,9 @@ int simpleHttpGet(request *);
 // post request
 int simpleHttpPost(request *, mediaType);
 
+// put request
+int simpleHttpPut(request *, mediaType);
+
 // delete request
 int simpleHttpDelete(request *, mediaType);
 
