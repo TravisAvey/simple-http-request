@@ -68,23 +68,23 @@ int simpleHttpRequest(request *req, mediaType type, method verb) {
   }
 
   struct curl_slist *headers = NULL;
-  simpleHttpSetMediaHeaders(req, type, headers);
+  setMediaHeaders(req, type, headers);
 
-  simpleHttpSetCustomHeaders(req, headers);
+  setCustomHeaders(req, headers);
 
-  simpleHttpSetMethod(req, verb);
+  setMethod(req, verb);
 
   // only if patch, post, put..
   if (verb != GET && verb != DELETE) {
     readBuffer buffer;
     buffer.readPtr = req->text;
     buffer.size = strlen(req->text);
-    curl_easy_setopt(req->curl, CURLOPT_READFUNCTION, simpleHttpReadCallback);
+    curl_easy_setopt(req->curl, CURLOPT_READFUNCTION, readCallback);
     curl_easy_setopt(req->curl, CURLOPT_READDATA, &buffer);
   }
 
   struct response chunk = {0};
-  simpleHttpSetOpts(req, &chunk);
+  setOpts(req, &chunk);
 
   CURLcode res = curl_easy_perform(req->curl);
 
@@ -94,7 +94,7 @@ int simpleHttpRequest(request *req, mediaType type, method verb) {
   }
   curl_easy_getinfo(req->curl, CURLINFO_RESPONSE_CODE, &req->code);
 
-  simpleHttpStoreResponse(&chunk, req);
+  storeResponse(&chunk, req);
 
   curl_slist_free_all(headers);
   headers = NULL;
@@ -103,10 +103,28 @@ int simpleHttpRequest(request *req, mediaType type, method verb) {
 }
 
 /*
+ *  Sets the username password for a request
+ *
+ *  @req the request struct object
+ *  @userpass the username and password (set as "username:password")
+ *  @dig if digest auth is needed (set DIGEST), else set as NONE
+ *
+ */
+void simpleHttpSetPassword(request *req, char *userpass, digest dig) {
+
+  if (userpass != NULL) {
+    printf("Setting user/pass: %s\n", userpass);
+    curl_easy_setopt(req->curl, CURLOPT_PASSWORD, userpass);
+    if (dig == DIGEST) {
+      curl_easy_setopt(req->curl, CURLOPT_HTTPAUTH, (long)CURLAUTH_DIGEST);
+    }
+  }
+}
+
+/*
  *  The callback for receiving data from a request
  */
-size_t simpleHttpWriteCallback(void *content, size_t size, size_t nmeb,
-                               void *userdata) {
+size_t writeCallback(void *content, size_t size, size_t nmeb, void *userdata) {
   size_t actualSize = size * nmeb;
   struct response *mem = (struct response *)userdata;
 
@@ -128,8 +146,7 @@ size_t simpleHttpWriteCallback(void *content, size_t size, size_t nmeb,
  *  The callback used for sending data on a request
  *
  */
-size_t simpleHttpReadCallback(char *dest, size_t size, size_t nmemb,
-                              void *userp) {
+size_t readCallback(char *dest, size_t size, size_t nmemb, void *userp) {
   readBuffer *buffer = (struct readBuffer *)userp;
   size_t bufSize = size * nmemb;
 
@@ -154,7 +171,7 @@ size_t simpleHttpReadCallback(char *dest, size_t size, size_t nmemb,
  *
  *  @chunk the buffer to store the response
  */
-void simpleHttpSetOpts(request *req, response *chunk) {
+void setOpts(request *req, response *chunk) {
 
   // get the agent from lubcurl
   char agent[1024] = {0};
@@ -176,7 +193,7 @@ void simpleHttpSetOpts(request *req, response *chunk) {
   curl_easy_setopt(req->curl, CURLOPT_TCP_KEEPALIVE, 1L);
 
   // curl options to save the response text
-  curl_easy_setopt(req->curl, CURLOPT_WRITEFUNCTION, simpleHttpWriteCallback);
+  curl_easy_setopt(req->curl, CURLOPT_WRITEFUNCTION, writeCallback);
   curl_easy_setopt(req->curl, CURLOPT_WRITEDATA, (void *)chunk);
 }
 
@@ -186,7 +203,7 @@ void simpleHttpSetOpts(request *req, response *chunk) {
  *  @chunk the write callback buffer
  *  @req the request object
  */
-void simpleHttpStoreResponse(response *chunk, request *req) {
+void storeResponse(response *chunk, request *req) {
   req->body = malloc(strlen(chunk->data) + 1);
   strcpy(req->body, chunk->data);
   free(chunk->data);
@@ -199,8 +216,7 @@ void simpleHttpStoreResponse(response *chunk, request *req) {
  *  @type the media type (JSON, XML, etc)
  *  @headers the slist object to add the headers to
  */
-void simpleHttpSetMediaHeaders(request *req, mediaType type,
-                               struct curl_slist *headers) {
+void setMediaHeaders(request *req, mediaType type, struct curl_slist *headers) {
 
   // check if request.text contains data
   // if not, setting headers for return type
@@ -239,7 +255,7 @@ void simpleHttpSetMediaHeaders(request *req, mediaType type,
 /*
  *   Sets the HTTP Method 'Verb' for the request
  */
-void simpleHttpSetMethod(request *req, method verb) {
+void setMethod(request *req, method verb) {
   if (verb == POST)
     curl_easy_setopt(req->curl, CURLOPT_POST, 1L);
   else if (verb == PATCH)
@@ -256,9 +272,10 @@ void simpleHttpSetMethod(request *req, method verb) {
  *   @req the request object
  *   @headers the slist object to add the headers to
  */
-void simpleHttpSetCustomHeaders(request *req, struct curl_slist *headers) {
+void setCustomHeaders(request *req, struct curl_slist *headers) {
 
   for (int i = 0; i < req->numHeaders; i++) {
+    printf("setting header: %s\n", req->headers[i]);
     headers = curl_slist_append(headers, req->headers[i]);
   }
 }
