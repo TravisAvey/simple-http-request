@@ -12,10 +12,16 @@
  *
  * returns 0 on success; -1 on fail
  */
-int simpleHttpInit() {
+int simpleHttpInit(request *req) {
   CURLcode res = curl_global_init(CURL_GLOBAL_DEFAULT);
   if (res != CURLE_OK) {
     printf("Error initializing library: %s\n", curl_easy_strerror(res));
+    return -1;
+  }
+  req->curl = curl_easy_init();
+
+  if (req->curl == NULL) {
+    printf("Error initializing library");
     return -1;
   }
   return 0;
@@ -25,7 +31,11 @@ int simpleHttpInit() {
  * closes and cleans up the http simple request library
  *  Call this when done using the library
  */
-void simpleHttpClose() { curl_global_cleanup(); }
+void simpleHttpClose(request *req) {
+  curl_easy_cleanup(req->curl);
+  req->curl = NULL;
+  curl_global_cleanup();
+}
 
 /*
  *  Sends a HTTP Request.
@@ -51,12 +61,7 @@ void simpleHttpClose() { curl_global_cleanup(); }
  *    from the server
  */
 int simpleHttpRequest(request *req, mediaType type, method verb) {
-  req->curl = curl_easy_init();
 
-  if (req->curl == NULL) {
-    printf("Error initializing library");
-    return -1;
-  }
   if (req->url == NULL) {
     printf("A URL is required to send an HTTP Request\n");
     return -1;
@@ -91,8 +96,6 @@ int simpleHttpRequest(request *req, mediaType type, method verb) {
 
   simpleHttpStoreResponse(&chunk, req);
 
-  curl_easy_cleanup(req->curl);
-  req->curl = NULL;
   curl_slist_free_all(headers);
   headers = NULL;
 

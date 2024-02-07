@@ -32,11 +32,11 @@ typedef struct readBuffer {
 } readBuffer;
 
 // initializes the simple http request library
-int simpleHttpInit();
+int simpleHttpInit(request *);
 
 // close and clean up the simple http request library
 // should be called when all requests are done
-void simpleHttpClose();
+void simpleHttpClose(request *);
 
 // sends a request based on method to supplied url
 // in the request struct
