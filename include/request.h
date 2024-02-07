@@ -4,11 +4,13 @@
 #include <curl/curl.h>
 
 typedef struct request {
-  CURL *curl; // The CURL object
-  char *url;  // The URL; where to send the request
-  char *text; // The text data to be sent
-  long code;  // The response code (200, 400, 500, etc)
-  char *body; // The response body text
+  CURL *curl;           // The CURL object
+  char *url;            // The URL; where to send the request
+  char *text;           // The text data to be sent
+  const char **headers; // An array of custom headers
+  int numHeaders;       // The number of custom headers
+  long code;            // The response code (200, 400, 500, etc)
+  char *body;           // The response body text
 } request;
 
 // Media Types for posting data
@@ -57,5 +59,8 @@ void simpleHttpStoreResponse(response *, request *);
 
 // sets the headers for a request
 void simpleHttpSetMediaHeaders(request *, mediaType, struct curl_slist *);
+
+// sets the custom headers for a request
+void simpleHttpSetCustomHeaders(request *, struct curl_slist *);
 
 #endif

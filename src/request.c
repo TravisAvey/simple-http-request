@@ -65,6 +65,8 @@ int simpleHttpRequest(request *req, mediaType type, method verb) {
   struct curl_slist *headers = NULL;
   simpleHttpSetMediaHeaders(req, type, headers);
 
+  simpleHttpSetCustomHeaders(req, headers);
+
   simpleHttpSetMethod(req, verb);
 
   // only if patch, post, put..
@@ -187,6 +189,13 @@ void simpleHttpStoreResponse(response *chunk, request *req) {
   free(chunk->data);
 }
 
+/*
+ *  Sets the Media Headers for Content-Type
+ *
+ *  @req the request struct object
+ *  @type the media type (JSON, XML, etc)
+ *  @headers the slist object to add the headers to
+ */
 void simpleHttpSetMediaHeaders(request *req, mediaType type,
                                struct curl_slist *headers) {
 
@@ -236,4 +245,17 @@ void simpleHttpSetMethod(request *req, method verb) {
     curl_easy_setopt(req->curl, CURLOPT_CUSTOMREQUEST, "PUT");
   else if (verb == DELETE)
     curl_easy_setopt(req->curl, CURLOPT_CUSTOMREQUEST, "DELETE");
+}
+
+/*
+ *   Sets the custom headers to the request
+ *
+ *   @req the request object
+ *   @headers the slist object to add the headers to
+ */
+void simpleHttpSetCustomHeaders(request *req, struct curl_slist *headers) {
+
+  for (int i = 0; i < req->numHeaders; i++) {
+    headers = curl_slist_append(headers, req->headers[i]);
+  }
 }
