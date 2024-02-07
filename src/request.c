@@ -113,8 +113,7 @@ int simpleHttpRequest(request *req, mediaType type, method verb) {
 void simpleHttpSetPassword(request *req, char *userpass, digest dig) {
 
   if (userpass != NULL) {
-    printf("Setting user/pass: %s\n", userpass);
-    curl_easy_setopt(req->curl, CURLOPT_PASSWORD, userpass);
+    curl_easy_setopt(req->curl, CURLOPT_USERPWD, userpass);
     if (dig == DIGEST) {
       curl_easy_setopt(req->curl, CURLOPT_HTTPAUTH, (long)CURLAUTH_DIGEST);
     }
@@ -275,7 +274,6 @@ void setMethod(request *req, method verb) {
 void setCustomHeaders(request *req, struct curl_slist *headers) {
 
   for (int i = 0; i < req->numHeaders; i++) {
-    printf("setting header: %s\n", req->headers[i]);
     headers = curl_slist_append(headers, req->headers[i]);
   }
 }
