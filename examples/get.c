@@ -23,6 +23,9 @@ int main(int argc, char *argv[]) {
   simpleHttpSetPassword(&req, "postman:password", DIGEST);
 
   int res = simpleHttpRequest(&req, JSON, GET);
+  if (res != NO_ERROR) {
+    printf("Error: %s\n", simpleHttpErrorString(res));
+  }
   printf("HTTP Response code: %ld\n", req.code);
   printf("req->data: %s\n", req.body);
 

@@ -19,7 +19,17 @@ typedef enum { CSV, JSON, HTML, TEXT, XML } mediaType;
 // HTTP verbs for calling request
 typedef enum { GET, POST, PUT, PATCH, DELETE } method;
 
+// Digest for auth on or off
 typedef enum { DIGEST, NONE } digest;
+
+// Error types, 0 is no error
+typedef enum {
+  NO_ERROR = 0,      // success
+  INIT_FAILED = 1,   // The initialization of the library failed
+  NO_URL = 2,        // Missing URL for the request
+  NO_MEMORY = 3,     // Couldn't initialize due to not enough memory
+  REQUEST_FAILED = 4 // The request failed -- not a server error
+} error;
 
 // struct to hold the response data
 typedef struct response {
@@ -33,39 +43,116 @@ typedef struct readBuffer {
   size_t size;
 } readBuffer;
 
-// initializes the simple http request library
-int simpleHttpInit(request *);
+/*
+ * intializes the simple http request library
+ *  This is required to be called before using
+ *
+ * @req the request struct object
+ *
+ * @return NO_ERROR on success
+ */
+error simpleHttpInit(request *);
 
-// close and clean up the simple http request library
-// should be called when all requests are done
+/*
+ * closes and cleans up the http simple request library
+ *  Call this when done using the library
+ *
+ *  @req the request struct object
+ */
 void simpleHttpClose(request *);
 
-// sends a request based on method to supplied url
-// in the request struct
-int simpleHttpRequest(request *, mediaType, method);
+/*
+ *  Sends a HTTP Request.
+ *
+ *    Sending a Request:
+ *      request.url is required to send any request
+ *        - example: https://api.endpoint/
+ *      request.text should be filled in with data being sent, such
+ *      as JSON, text, etc to be sent (not required for GET/DELETE requests)
+ *
+ *    On successful response from the server:
+ *      The request.code will be filled in with the server's response
+ *      such as 200, 404, etc
+ *      The request.body will be filled in the response body, such as
+ *      using GET to retreive JSON
+ *
+ *  @req the request object that has the URL and optional upload data
+ *  @type the Media Type expected (JSON, text, xml, etc)
+ *  @verb the HTTP request Method (GET, POST, PUT, PATCH, DELETE)
+ *
+ *  @return NO_ERROR if successful
+ *    Be sure to check the request.code and request.body for any issues
+ *    from the server
+ */
+error simpleHttpRequest(request *, mediaType, method);
 
-// sets the username and password for the request
+/*
+ *  Sets the username password for a request
+ *
+ *  @req the request struct object
+ *  @userpass the username and password (set as "username:password")
+ *  @dig if digest auth is needed (set DIGEST), else set as NONE
+ *
+ */
 void simpleHttpSetPassword(request *, char *, digest);
 
-// sets the custom headers for a request
+/*
+ *  Returs the error code as a helpful string
+ *
+ *  @err the error code
+ *
+ *  @return the error as a string
+ */
+char *simpleHttpErrorString(error);
+
+/*
+ *   Sets the custom headers to the request
+ *
+ *   @req the request object
+ *   @headers the slist object to add the headers to
+ */
 void setCustomHeaders(request *, struct curl_slist *);
 
-// callback that curl will call during a get request
+/*
+ *  The callback for receiving data from a request
+ */
 static size_t writeCallback(void *, size_t, size_t, void *);
 
-// callback that curl will call during a send request (POST)
+/*
+ *  The callback used for sending data on a request
+ *
+ */
 static size_t readCallback(char *, size_t, size_t, void *);
 
-// sets the curl option HTTP request method
+/*
+ *   Sets the HTTP Method 'Verb' for the request
+ */
 void setMethod(request *, method);
 
-// sets standard curl options
+/*
+ *  Sets the standard CURL options
+ *
+ *  @req the requst object
+ *
+ *  @chunk the buffer to store the response
+ */
 void setOpts(request *, response *);
 
-// saves the response text in the request object
+/*
+ *  saves the response text into the request object
+ *
+ *  @chunk the write callback buffer
+ *  @req the request object
+ */
 void storeResponse(response *, request *);
 
-// sets the headers for a request
+/*
+ *  Sets the Media Headers for Content-Type
+ *
+ *  @req the request struct object
+ *  @type the media type (JSON, XML, etc)
+ *  @headers the slist object to add the headers to
+ */
 void setMediaHeaders(request *, mediaType, struct curl_slist *);
 
 #endif
