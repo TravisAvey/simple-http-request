@@ -6,65 +6,29 @@
 #include <stdlib.h>
 #include <string.h>
 
-/*
- * intializes the simple http request library
- *  This is required to be called before using
- *
- * returns 0 on success; -1 on fail
- */
-int simpleHttpInit(request *req) {
+error simpleHttpInit(request *req) {
   CURLcode res = curl_global_init(CURL_GLOBAL_DEFAULT);
   if (res != CURLE_OK) {
-    printf("Error initializing library: %s\n", curl_easy_strerror(res));
-    return -1;
+    return INIT_FAILED;
   }
   req->curl = curl_easy_init();
 
   if (req->curl == NULL) {
-    printf("Error initializing library");
-    return -1;
+    return INIT_FAILED;
   }
-  return 0;
+  return NO_ERROR;
 }
 
-/*
- * closes and cleans up the http simple request library
- *  Call this when done using the library
- */
 void simpleHttpClose(request *req) {
   curl_easy_cleanup(req->curl);
   req->curl = NULL;
   curl_global_cleanup();
 }
 
-/*
- *  Sends a HTTP Request.
- *
- *    Sending a Request:
- *      request.url is required to send any request
- *        - example: https://api.endpoint/
- *      request.text should be filled in with data being sent, such
- *      as JSON, text, etc to be sent (not required for GET/DELETE requests)
- *
- *    On successful response from the server:
- *      The request.code will be filled in with the server's response
- *      such as 200, 404, etc
- *      The request.body will be filled in the response body, such as
- *      using GET to retreive JSON
- *
- *  @req the request object that has the URL and optional upload data
- *  @type the Media Type expected (JSON, text, xml, etc)
- *  @verb the HTTP request Method (GET, POST, PUT, PATCH, DELETE)
- *
- *  @return 0 success, -1 fail
- *    Be sure to check the request.code and request.body for any issues
- *    from the server
- */
-int simpleHttpRequest(request *req, mediaType type, method verb) {
+error simpleHttpRequest(request *req, mediaType type, method verb) {
 
   if (req->url == NULL) {
-    printf("A URL is required to send an HTTP Request\n");
-    return -1;
+    return NO_URL;
   }
 
   struct curl_slist *headers = NULL;
@@ -89,8 +53,7 @@ int simpleHttpRequest(request *req, mediaType type, method verb) {
   CURLcode res = curl_easy_perform(req->curl);
 
   if (res != CURLE_OK) {
-    printf("post request failed: %s\n", curl_easy_strerror(res));
-    return -1;
+    return REQUEST_FAILED;
   }
   curl_easy_getinfo(req->curl, CURLINFO_RESPONSE_CODE, &req->code);
 
@@ -99,17 +62,9 @@ int simpleHttpRequest(request *req, mediaType type, method verb) {
   curl_slist_free_all(headers);
   headers = NULL;
 
-  return 0;
+  return NO_ERROR;
 }
 
-/*
- *  Sets the username password for a request
- *
- *  @req the request struct object
- *  @userpass the username and password (set as "username:password")
- *  @dig if digest auth is needed (set DIGEST), else set as NONE
- *
- */
 void simpleHttpSetPassword(request *req, char *userpass, digest dig) {
 
   if (userpass != NULL) {
@@ -120,9 +75,26 @@ void simpleHttpSetPassword(request *req, char *userpass, digest dig) {
   }
 }
 
-/*
- *  The callback for receiving data from a request
- */
+char *simpleHttpErrorString(error err) {
+  char *errStr;
+
+  if (err == NO_ERROR) {
+    return "";
+  } else if (err == INIT_FAILED) {
+    errStr = "Failed to initialize library";
+  } else if (err == NO_MEMORY) {
+    errStr = "Not enough memory for allocation";
+  } else if (err == REQUEST_FAILED) {
+    errStr = "The request failed--could not perform the request";
+  } else if (err == NO_URL) {
+    errStr = "Missing URL. Need a location to perform a request";
+  } else {
+    errStr = "Something went wrong.";
+  }
+
+  return errStr;
+}
+
 size_t writeCallback(void *content, size_t size, size_t nmeb, void *userdata) {
   size_t actualSize = size * nmeb;
   struct response *mem = (struct response *)userdata;
@@ -130,7 +102,6 @@ size_t writeCallback(void *content, size_t size, size_t nmeb, void *userdata) {
   char *ptr = realloc(mem->data, mem->size + actualSize + 1);
 
   if (!ptr) {
-    printf("Not enough memory to allocate for the callback\n");
     return 0;
   }
   mem->data = ptr;
@@ -141,10 +112,6 @@ size_t writeCallback(void *content, size_t size, size_t nmeb, void *userdata) {
   return actualSize;
 }
 
-/*
- *  The callback used for sending data on a request
- *
- */
 size_t readCallback(char *dest, size_t size, size_t nmemb, void *userp) {
   readBuffer *buffer = (struct readBuffer *)userp;
   size_t bufSize = size * nmemb;
@@ -163,13 +130,6 @@ size_t readCallback(char *dest, size_t size, size_t nmemb, void *userp) {
   return 0;
 }
 
-/*
- *  Sets the standard CURL options
- *
- *  @req the requst object
- *
- *  @chunk the buffer to store the response
- */
 void setOpts(request *req, response *chunk) {
 
   // get the agent from lubcurl
@@ -196,25 +156,12 @@ void setOpts(request *req, response *chunk) {
   curl_easy_setopt(req->curl, CURLOPT_WRITEDATA, (void *)chunk);
 }
 
-/*
- *  saves the response text into the request object
- *
- *  @chunk the write callback buffer
- *  @req the request object
- */
 void storeResponse(response *chunk, request *req) {
   req->body = malloc(strlen(chunk->data) + 1);
   strcpy(req->body, chunk->data);
   free(chunk->data);
 }
 
-/*
- *  Sets the Media Headers for Content-Type
- *
- *  @req the request struct object
- *  @type the media type (JSON, XML, etc)
- *  @headers the slist object to add the headers to
- */
 void setMediaHeaders(request *req, mediaType type, struct curl_slist *headers) {
 
   // check if request.text contains data
@@ -251,9 +198,6 @@ void setMediaHeaders(request *req, mediaType type, struct curl_slist *headers) {
   curl_easy_setopt(req->curl, CURLOPT_HTTPHEADER, headers);
 }
 
-/*
- *   Sets the HTTP Method 'Verb' for the request
- */
 void setMethod(request *req, method verb) {
   if (verb == POST)
     curl_easy_setopt(req->curl, CURLOPT_POST, 1L);
@@ -265,12 +209,6 @@ void setMethod(request *req, method verb) {
     curl_easy_setopt(req->curl, CURLOPT_CUSTOMREQUEST, "DELETE");
 }
 
-/*
- *   Sets the custom headers to the request
- *
- *   @req the request object
- *   @headers the slist object to add the headers to
- */
 void setCustomHeaders(request *req, struct curl_slist *headers) {
 
   for (int i = 0; i < req->numHeaders; i++) {
