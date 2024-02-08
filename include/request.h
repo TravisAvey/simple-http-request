@@ -19,6 +19,8 @@ typedef enum { CSV, JSON, HTML, TEXT, XML } mediaType;
 // HTTP verbs for calling request
 typedef enum { GET, POST, PUT, PATCH, DELETE } method;
 
+typedef enum { DIGEST, NONE } digest;
+
 // struct to hold the response data
 typedef struct response {
   char *data;
@@ -42,25 +44,28 @@ void simpleHttpClose(request *);
 // in the request struct
 int simpleHttpRequest(request *, mediaType, method);
 
-// callback that curl will call during a get request
-static size_t simpleHttpWriteCallback(void *, size_t, size_t, void *);
-
-// callback that curl will call during a send request (POST)
-static size_t simpleHttpReadCallback(char *, size_t, size_t, void *);
-
-// sets the curl option HTTP request method
-void simpleHttpSetMethod(request *, method);
-
-// sets standard curl options
-void simpleHttpSetOpts(request *, response *);
-
-// saves the response text in the request object
-void simpleHttpStoreResponse(response *, request *);
-
-// sets the headers for a request
-void simpleHttpSetMediaHeaders(request *, mediaType, struct curl_slist *);
+// sets the username and password for the request
+void simpleHttpSetPassword(request *, char *, digest);
 
 // sets the custom headers for a request
-void simpleHttpSetCustomHeaders(request *, struct curl_slist *);
+void setCustomHeaders(request *, struct curl_slist *);
+
+// callback that curl will call during a get request
+static size_t writeCallback(void *, size_t, size_t, void *);
+
+// callback that curl will call during a send request (POST)
+static size_t readCallback(char *, size_t, size_t, void *);
+
+// sets the curl option HTTP request method
+void setMethod(request *, method);
+
+// sets standard curl options
+void setOpts(request *, response *);
+
+// saves the response text in the request object
+void storeResponse(response *, request *);
+
+// sets the headers for a request
+void setMediaHeaders(request *, mediaType, struct curl_slist *);
 
 #endif
