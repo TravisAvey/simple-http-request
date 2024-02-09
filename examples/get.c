@@ -6,6 +6,7 @@ int main() {
    * Overview of calling a GET request:
    *   - Initialize library with a request object
    *   - Set a URL
+   *   - add optional headers or username/password
    *   - Call the request (simpleHttpRequest)
    *   - Check for any errors
    *   - check response code and body
@@ -39,6 +40,8 @@ int main() {
 
   // Depending on the server requirements set the headers:
   // Add more to the array as needed, each will be added to the request headers
+  //
+  // Headers can be added to any request
   const char *headers[] = {"Authorization: Basic cG9zdG1hbjpwYXNzd29yZA=="};
   req.headers = headers;
   // set the number of headers your adding
@@ -56,10 +59,11 @@ int main() {
   if (res != NO_ERROR) {
     printf("Error: %s\n", simpleHttpErrorString(res));
   }
+  // check response code and body
   printf("HTTP Response code: %ld\n", req.code);
   printf("req->data: %s\n", req.body);
 
-  // when done, be sure to close the library
+  // when done: close the library
   simpleHttpClose(&req);
 
   return 0;
