@@ -22,6 +22,12 @@ error simpleHttpInit(request *req) {
 void simpleHttpClose(request *req) {
   curl_easy_cleanup(req->curl);
   req->curl = NULL;
+
+  req->url = NULL;
+  req->headers = NULL;
+  req->body = NULL;
+  req->text = NULL;
+
   curl_global_cleanup();
 }
 
