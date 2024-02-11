@@ -15,7 +15,6 @@ int main() {
 
   // declare the request object
   request req;
-  response res;
   // initialize the simple http library
   simpleHttpInit(&req);
 
@@ -26,7 +25,7 @@ int main() {
   // pass in the request object
   // the media type (for headers)
   // And the request type
-  simpleHttpRequest(&req, &res, JSON, GET);
+  response res = simpleHttpRequest(&req, JSON, GET);
   // check for errors; 0 or NO_ERROR is success
   if (res.err != NO_ERROR) {
     printf("Error: %s\n", simpleHttpErrorString(res.err));
@@ -55,7 +54,7 @@ int main() {
   simpleHttpSetPassword(&req, "postman:password", DIGEST);
 
   // call the request
-  simpleHttpRequest(&req, &res, JSON, GET);
+  res = simpleHttpRequest(&req, JSON, GET);
   // check for errors
   if (res.err != NO_ERROR) {
     printf("Error: %s\n", simpleHttpErrorString(res.err));

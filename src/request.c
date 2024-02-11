@@ -25,26 +25,22 @@ void simpleHttpClose(request *req, response *res) {
 
   req->url = NULL;
   req->headers = NULL;
-
+  req->text = NULL;
   res->body = NULL;
 
   curl_global_cleanup();
 }
 
-void simpleHttpRequest(request *req, response *response, mediaType type,
-                       method verb) {
-
-  response->err = NO_ERROR;
+response simpleHttpRequest(request *req, mediaType type, method verb) {
+  response response;
 
   if (req->url == NULL) {
-    response->err = NO_URL;
-    return;
+    response.err = NO_URL;
+    return response;
   }
 
-  struct curl_slist *headers = NULL;
-  setMediaHeaders(req, type, headers);
-
-  setCustomHeaders(req, headers);
+  response.err = NO_ERROR;
+  response.body = NULL;
 
   setMethod(req, verb);
 
@@ -60,18 +56,23 @@ void simpleHttpRequest(request *req, response *response, mediaType type,
   struct writeBuffer chunk = {0};
   setOpts(req, &chunk);
 
+  struct curl_slist *headers = NULL;
+  setCustomHeaders(req, headers);
+
   CURLcode res = curl_easy_perform(req->curl);
 
   if (res != CURLE_OK) {
-    response->err = REQUEST_FAILED;
-    return;
+    response.err = REQUEST_FAILED;
+    return response;
   }
-  curl_easy_getinfo(req->curl, CURLINFO_RESPONSE_CODE, &response->code);
-
-  storeResponse(&chunk, response);
 
   curl_slist_free_all(headers);
   headers = NULL;
+
+  curl_easy_getinfo(req->curl, CURLINFO_RESPONSE_CODE, &response.code);
+
+  storeResponse(&chunk, &response);
+  return response;
 }
 
 void simpleHttpSetPassword(request *req, char *userpass, digest dig) {
@@ -222,5 +223,8 @@ void setCustomHeaders(request *req, struct curl_slist *headers) {
 
   for (int i = 0; i < req->numHeaders; i++) {
     headers = curl_slist_append(headers, req->headers[i]);
+    if (!headers) {
+      printf("headers is NULL\n");
+    }
   }
 }
