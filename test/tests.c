@@ -8,9 +8,11 @@
 
 int main(int argc, char *argv[]) {
   request req;
+  response res;
+  // response res;
   simpleHttpInit(&req);
 
-  simpleHttpClose(&req);
+  simpleHttpClose(&req, &res);
 
   return 0;
 }

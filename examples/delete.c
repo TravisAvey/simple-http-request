@@ -11,12 +11,13 @@
 int main(int argc, char *argv[]) {
 
   request req;
+  response res;
   simpleHttpInit(&req);
   req.url = "https://httpbin.org/delete";
-  int res = simpleHttpRequest(&req, JSON, DELETE);
-  printf("HTTP Response code: %ld\n", req.code);
-  printf("req->data: %s\n", req.body);
-  simpleHttpClose(&req);
+  simpleHttpRequest(&req, &res, JSON, DELETE);
+  printf("HTTP Response code: %ld\n", res.code);
+  printf("req->data: %s\n", res.body);
+  simpleHttpClose(&req, &res);
 
   return 0;
 }

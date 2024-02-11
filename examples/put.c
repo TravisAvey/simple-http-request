@@ -4,6 +4,7 @@
 int main(int argc, char *argv[]) {
 
   request req;
+  response res;
 
   simpleHttpInit(&req);
 
@@ -12,11 +13,11 @@ int main(int argc, char *argv[]) {
   // data to update
   req.text = "{ \"name\": \"Jim Halpert\"}";
 
-  simpleHttpRequest(&req, JSON, PUT);
+  simpleHttpRequest(&req, &res, JSON, PUT);
 
-  printf("Response Code: %ld\n", req.code);
-  printf("Response: %s\n", req.body);
+  printf("Response Code: %ld\n", res.code);
+  printf("Response: %s\n", res.body);
 
-  simpleHttpClose(&req);
+  simpleHttpClose(&req, &res);
   return 0;
 }

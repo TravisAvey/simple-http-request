@@ -19,22 +19,26 @@ error simpleHttpInit(request *req) {
   return NO_ERROR;
 }
 
-void simpleHttpClose(request *req) {
+void simpleHttpClose(request *req, response *res) {
   curl_easy_cleanup(req->curl);
   req->curl = NULL;
 
   req->url = NULL;
   req->headers = NULL;
-  req->body = NULL;
-  req->text = NULL;
+
+  res->body = NULL;
 
   curl_global_cleanup();
 }
 
-error simpleHttpRequest(request *req, mediaType type, method verb) {
+void simpleHttpRequest(request *req, response *response, mediaType type,
+                       method verb) {
+
+  response->err = NO_ERROR;
 
   if (req->url == NULL) {
-    return NO_URL;
+    response->err = NO_URL;
+    return;
   }
 
   struct curl_slist *headers = NULL;
@@ -53,22 +57,21 @@ error simpleHttpRequest(request *req, mediaType type, method verb) {
     curl_easy_setopt(req->curl, CURLOPT_READDATA, &buffer);
   }
 
-  struct response chunk = {0};
+  struct writeBuffer chunk = {0};
   setOpts(req, &chunk);
 
   CURLcode res = curl_easy_perform(req->curl);
 
   if (res != CURLE_OK) {
-    return REQUEST_FAILED;
+    response->err = REQUEST_FAILED;
+    return;
   }
-  curl_easy_getinfo(req->curl, CURLINFO_RESPONSE_CODE, &req->code);
+  curl_easy_getinfo(req->curl, CURLINFO_RESPONSE_CODE, response->code);
 
-  storeResponse(&chunk, req);
+  storeResponse(&chunk, response);
 
   curl_slist_free_all(headers);
   headers = NULL;
-
-  return NO_ERROR;
 }
 
 void simpleHttpSetPassword(request *req, char *userpass, digest dig) {
@@ -103,7 +106,7 @@ char *simpleHttpErrorString(error err) {
 
 size_t writeCallback(void *content, size_t size, size_t nmeb, void *userdata) {
   size_t actualSize = size * nmeb;
-  struct response *mem = (struct response *)userdata;
+  struct writeBuffer *mem = (struct writeBuffer *)userdata;
 
   char *ptr = realloc(mem->data, mem->size + actualSize + 1);
 
@@ -136,7 +139,7 @@ size_t readCallback(char *dest, size_t size, size_t nmemb, void *userp) {
   return 0;
 }
 
-void setOpts(request *req, response *chunk) {
+void setOpts(request *req, writeBuffer *chunk) {
 
   // get the agent from lubcurl
   char agent[1024] = {0};
@@ -162,9 +165,9 @@ void setOpts(request *req, response *chunk) {
   curl_easy_setopt(req->curl, CURLOPT_WRITEDATA, (void *)chunk);
 }
 
-void storeResponse(response *chunk, request *req) {
-  req->body = malloc(strlen(chunk->data) + 1);
-  strcpy(req->body, chunk->data);
+void storeResponse(writeBuffer *chunk, response *res) {
+  res->body = malloc(strlen(chunk->data) + 1);
+  strcpy(res->body, chunk->data);
   free(chunk->data);
 }
 
