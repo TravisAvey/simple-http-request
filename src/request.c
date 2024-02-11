@@ -66,7 +66,7 @@ void simpleHttpRequest(request *req, response *response, mediaType type,
     response->err = REQUEST_FAILED;
     return;
   }
-  curl_easy_getinfo(req->curl, CURLINFO_RESPONSE_CODE, response->code);
+  curl_easy_getinfo(req->curl, CURLINFO_RESPONSE_CODE, &response->code);
 
   storeResponse(&chunk, response);
 
