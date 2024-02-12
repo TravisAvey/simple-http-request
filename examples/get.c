@@ -29,7 +29,7 @@ int main() {
   error err = simpleHttpRequest(&req, &res, JSON, GET);
   // check for errors; 0 or NO_ERROR is success
   if (err != NO_ERROR) {
-    printf("Error: %s\n", simpleHttpErrorString(res.err));
+    printf("Error: %s\n", simpleHttpErrorString(err));
   }
   // Check the response:
   printf("HTTP Response code: %ld\n", res.code);
@@ -58,7 +58,7 @@ int main() {
   err = simpleHttpRequest(&req, &res, JSON, GET);
   // check for errors
   if (err != NO_ERROR) {
-    printf("Error: %s\n", simpleHttpErrorString(res.err));
+    printf("Error: %s\n", simpleHttpErrorString(err));
   }
   // check response code and body
   printf("HTTP Response code: %ld\n", res.code);

@@ -32,7 +32,6 @@ typedef struct request {
 typedef struct response {
   long code;  // The response code (200, 400, 500, etc)
   char *body; // The response body text
-  error err;  // error code if library failed
 } response;
 
 // struct to hold the response data
