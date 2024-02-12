@@ -3,16 +3,6 @@
 
 #include <curl/curl.h>
 
-typedef struct request {
-  CURL *curl;           // The CURL object
-  char *url;            // The URL; where to send the request
-  char *text;           // The text data to be sent
-  const char **headers; // An array of custom headers
-  int numHeaders;       // The number of custom headers
-  long code;            // The response code (200, 400, 500, etc)
-  char *body;           // The response body text
-} request;
-
 // Media Types for posting data
 typedef enum { CSV, JSON, HTML, TEXT, XML } mediaType;
 
@@ -31,11 +21,25 @@ typedef enum {
   REQUEST_FAILED = 4 // The request failed -- not a server error
 } error;
 
-// struct to hold the response data
+typedef struct request {
+  CURL *curl;           // The CURL object
+  char *url;            // The URL; where to send the request
+  char *text;           // The text data to be sent
+  const char **headers; // An array of custom headers
+  int numHeaders;       // The number of custom headers
+} request;
+
 typedef struct response {
+  long code;  // The response code (200, 400, 500, etc)
+  char *body; // The response body text
+  error err;  // error code if library failed
+} response;
+
+// struct to hold the response data
+typedef struct writeBuffer {
   char *data;
   size_t size;
-} response;
+} writeBuffer;
 
 // struct to hold data to be sent
 typedef struct readBuffer {
@@ -59,7 +63,7 @@ error simpleHttpInit(request *);
  *
  *  @req the request struct object
  */
-void simpleHttpClose(request *);
+void simpleHttpClose(request *, response *);
 
 /*
  *  Sends a HTTP Request.
@@ -84,7 +88,7 @@ void simpleHttpClose(request *);
  *    Be sure to check the request.code and request.body for any issues
  *    from the server
  */
-error simpleHttpRequest(request *, mediaType, method);
+error simpleHttpRequest(request *, response *, mediaType, method);
 
 /*
  *  Sets the username password for a request
@@ -136,7 +140,7 @@ void setMethod(request *, method);
  *
  *  @chunk the buffer to store the response
  */
-void setOpts(request *, response *);
+void setOpts(request *, writeBuffer *);
 
 /*
  *  saves the response text into the request object
@@ -144,7 +148,7 @@ void setOpts(request *, response *);
  *  @chunk the write callback buffer
  *  @req the request object
  */
-void storeResponse(response *, request *);
+void storeResponse(writeBuffer *, response *);
 
 /*
  *  Sets the Media Headers for Content-Type
