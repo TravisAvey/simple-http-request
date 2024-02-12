@@ -11,6 +11,11 @@ error simpleHttpInit(request *req) {
   if (res != CURLE_OK) {
     return INIT_FAILED;
   }
+
+  req->headers = NULL;
+  req->numHeaders = 0;
+  req->text = NULL;
+
   req->curl = curl_easy_init();
 
   if (req->curl == NULL) {
@@ -38,7 +43,6 @@ error simpleHttpRequest(request *req, response *res, mediaType type,
     return NO_URL;
   }
 
-  res->err = NO_ERROR;
   res->body = NULL;
 
   setMethod(req, verb);
@@ -56,7 +60,9 @@ error simpleHttpRequest(request *req, response *res, mediaType type,
   setOpts(req, &chunk);
 
   struct curl_slist *headers = NULL;
-  setCustomHeaders(req, headers);
+  if (req->headers) {
+    setCustomHeaders(req, headers);
+  }
 
   CURLcode curlRes = curl_easy_perform(req->curl);
 
@@ -65,7 +71,6 @@ error simpleHttpRequest(request *req, response *res, mediaType type,
   }
 
   curl_slist_free_all(headers);
-  headers = NULL;
 
   curl_easy_getinfo(req->curl, CURLINFO_RESPONSE_CODE, &res->code);
 
@@ -215,14 +220,13 @@ void setMethod(request *req, method verb) {
     curl_easy_setopt(req->curl, CURLOPT_CUSTOMREQUEST, "PUT");
   else if (verb == DELETE)
     curl_easy_setopt(req->curl, CURLOPT_CUSTOMREQUEST, "DELETE");
+  else if (verb == GET)
+    curl_easy_setopt(req->curl, CURLOPT_CUSTOMREQUEST, "GET");
 }
 
 void setCustomHeaders(request *req, struct curl_slist *headers) {
 
   for (int i = 0; i < req->numHeaders; i++) {
     headers = curl_slist_append(headers, req->headers[i]);
-    if (!headers) {
-      printf("headers is NULL\n");
-    }
   }
 }

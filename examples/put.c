@@ -13,7 +13,9 @@ int main(int argc, char *argv[]) {
   // data to update
   req.text = "{ \"name\": \"Jim Halpert\"}";
 
-  simpleHttpRequest(&req, &res, JSON, PUT);
+  error err = simpleHttpRequest(&req, &res, JSON, PUT);
+  if (err != NO_ERROR)
+    printf("error: %s\n", simpleHttpErrorString(err));
 
   printf("Response Code: %ld\n", res.code);
   printf("Response: %s\n", res.body);

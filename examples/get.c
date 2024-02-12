@@ -28,7 +28,7 @@ int main() {
   // And the request type
   error err = simpleHttpRequest(&req, &res, JSON, GET);
   // check for errors; 0 or NO_ERROR is success
-  if (res.err != NO_ERROR) {
+  if (err != NO_ERROR) {
     printf("Error: %s\n", simpleHttpErrorString(res.err));
   }
   // Check the response:
@@ -55,9 +55,9 @@ int main() {
   simpleHttpSetPassword(&req, "postman:password", DIGEST);
 
   // call the request
-  simpleHttpRequest(&req, &res, JSON, GET);
+  err = simpleHttpRequest(&req, &res, JSON, GET);
   // check for errors
-  if (res.err != NO_ERROR) {
+  if (err != NO_ERROR) {
     printf("Error: %s\n", simpleHttpErrorString(res.err));
   }
   // check response code and body

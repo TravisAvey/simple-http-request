@@ -11,7 +11,9 @@ int main(int argc, char *argv[]) {
   req.url = "https://httpbin.org/post";
   req.text = "{ \"name\": \"Jim Halpert\"}";
 
-  simpleHttpRequest(&req, &res, JSON, POST);
+  error err = simpleHttpRequest(&req, &res, JSON, POST);
+  if (err != NO_ERROR)
+    printf("error: %s\n", simpleHttpErrorString(err));
 
   printf("Response Code: %ld\n", res.code);
   printf("Response: %s\n", res.body);
