@@ -31,16 +31,15 @@ void simpleHttpClose(request *req, response *res) {
   curl_global_cleanup();
 }
 
-response simpleHttpRequest(request *req, mediaType type, method verb) {
-  response response;
+error simpleHttpRequest(request *req, response *res, mediaType type,
+                        method verb) {
 
   if (req->url == NULL) {
-    response.err = NO_URL;
-    return response;
+    return NO_URL;
   }
 
-  response.err = NO_ERROR;
-  response.body = NULL;
+  res->err = NO_ERROR;
+  res->body = NULL;
 
   setMethod(req, verb);
 
@@ -59,20 +58,19 @@ response simpleHttpRequest(request *req, mediaType type, method verb) {
   struct curl_slist *headers = NULL;
   setCustomHeaders(req, headers);
 
-  CURLcode res = curl_easy_perform(req->curl);
+  CURLcode curlRes = curl_easy_perform(req->curl);
 
-  if (res != CURLE_OK) {
-    response.err = REQUEST_FAILED;
-    return response;
+  if (curlRes != CURLE_OK) {
+    return REQUEST_FAILED;
   }
 
   curl_slist_free_all(headers);
   headers = NULL;
 
-  curl_easy_getinfo(req->curl, CURLINFO_RESPONSE_CODE, &response.code);
+  curl_easy_getinfo(req->curl, CURLINFO_RESPONSE_CODE, &res->code);
 
-  storeResponse(&chunk, &response);
-  return response;
+  storeResponse(&chunk, res);
+  return NO_ERROR;
 }
 
 void simpleHttpSetPassword(request *req, char *userpass, digest dig) {

@@ -88,7 +88,7 @@ void simpleHttpClose(request *, response *);
  *    Be sure to check the request.code and request.body for any issues
  *    from the server
  */
-response simpleHttpRequest(request *, mediaType, method);
+error simpleHttpRequest(request *, response *, mediaType, method);
 
 /*
  *  Sets the username password for a request
