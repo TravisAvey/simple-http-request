@@ -6,6 +6,10 @@
 #include <stdlib.h>
 #include <string.h>
 
+static size_t writeCallback(void *, size_t, size_t, void *);
+
+static size_t readCallback(char *, size_t, size_t, void *);
+
 error simpleHttpInit(request *req) {
   CURLcode res = curl_global_init(CURL_GLOBAL_DEFAULT);
   if (res != CURLE_OK) {
@@ -80,7 +84,7 @@ error simpleHttpRequest(request *req, response *res, mediaType type,
   return NO_ERROR;
 }
 
-void simpleHttpSetPassword(request *req, char *userpass, digest dig) {
+void simpleHttpSetPassword(request *req, const char *userpass, digest dig) {
 
   if (userpass != NULL) {
     curl_easy_setopt(req->curl, CURLOPT_USERPWD, userpass);
@@ -109,7 +113,8 @@ const char *simpleHttpErrorString(error err) {
   return "";
 }
 
-size_t writeCallback(void *content, size_t size, size_t nmeb, void *userdata) {
+static size_t writeCallback(void *content, size_t size, size_t nmeb,
+                            void *userdata) {
   size_t actualSize = size * nmeb;
   struct writeBuffer *mem = (struct writeBuffer *)userdata;
 
@@ -126,7 +131,7 @@ size_t writeCallback(void *content, size_t size, size_t nmeb, void *userdata) {
   return actualSize;
 }
 
-size_t readCallback(char *dest, size_t size, size_t nmemb, void *userp) {
+static size_t readCallback(char *dest, size_t size, size_t nmemb, void *userp) {
   readBuffer *buffer = (struct readBuffer *)userp;
   size_t bufSize = size * nmemb;
 

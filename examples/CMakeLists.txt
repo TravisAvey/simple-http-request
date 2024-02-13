@@ -1,6 +1,8 @@
 function(add_example_exe name)
   add_executable(${name} ${name}.c)
   target_link_libraries(${name} httprequest)
+  target_compile_options(${name} PRIVATE -Wall -Wextra -Werror -O
+                                         -Wwrite-strings)
 endfunction()
 
 add_example_exe(get)

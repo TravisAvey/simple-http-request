@@ -52,7 +52,8 @@ int main() {
   // pass in the request object
   // the username and password as "username:password"
   // If the server requires DIGETS, otherwise NONE
-  simpleHttpSetPassword(&req, "postman:password", DIGEST);
+  const char *userpass = "postman:password";
+  simpleHttpSetPassword(&req, userpass, DIGEST);
 
   // call the request
   err = simpleHttpRequest(&req, &res, JSON, GET);

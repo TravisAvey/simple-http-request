@@ -8,7 +8,7 @@
 #include "../include/request.h"
 #include <stdio.h>
 
-int main(int argc, char *argv[]) {
+int main() {
 
   request req;
   response res;
