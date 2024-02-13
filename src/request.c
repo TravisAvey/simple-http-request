@@ -64,6 +64,8 @@ error simpleHttpRequest(request *req, response *res, mediaType type,
     setCustomHeaders(req, headers);
   }
 
+  setMediaHeaders(req, type, headers);
+
   CURLcode curlRes = curl_easy_perform(req->curl);
 
   if (curlRes != CURLE_OK) {
@@ -88,24 +90,23 @@ void simpleHttpSetPassword(request *req, char *userpass, digest dig) {
   }
 }
 
-char *simpleHttpErrorString(error err) {
-  char *errStr;
+const char *simpleHttpErrorString(error err) {
 
   if (err == NO_ERROR) {
     return "";
   } else if (err == INIT_FAILED) {
-    errStr = "Failed to initialize library";
+    return "Failed to initialize library";
   } else if (err == NO_MEMORY) {
-    errStr = "Not enough memory for allocation";
+    return "Not enough memory for allocation";
   } else if (err == REQUEST_FAILED) {
-    errStr = "The request failed--could not perform the request";
+    return "The request failed--could not perform the request";
   } else if (err == NO_URL) {
-    errStr = "Missing URL. Need a location to perform a request";
+    return "Missing URL. Need a location to perform a request";
   } else {
-    errStr = "Something went wrong.";
+    return "Something went wrong.";
   }
 
-  return errStr;
+  return "";
 }
 
 size_t writeCallback(void *content, size_t size, size_t nmeb, void *userdata) {

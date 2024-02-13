@@ -106,7 +106,7 @@ void simpleHttpSetPassword(request *, char *, digest);
  *
  *  @return the error as a string
  */
-char *simpleHttpErrorString(error);
+const char *simpleHttpErrorString(error);
 
 /*
  *   Sets the custom headers to the request
