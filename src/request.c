@@ -6,13 +6,24 @@
 #include <stdlib.h>
 #include <string.h>
 
+#ifdef VERBOSE
+#define DEBUG(x, args...)                                                      \
+  fprintf(stderr, " [%s(), %s:%u]\n" x, __FUNCTION__, __FILE__, __LINE__,      \
+          ##args)
+#else
+#define DEBUG(x, args...)
+#endif
+
 static size_t writeCallback(void *, size_t, size_t, void *);
 
 static size_t readCallback(char *, size_t, size_t, void *);
 
 error simpleHttpInit(request *req) {
+  DEBUG("Initializng library...\n");
   CURLcode res = curl_global_init(CURL_GLOBAL_DEFAULT);
   if (res != CURLE_OK) {
+    DEBUG("Something went wront initializing library: %s\n",
+          curl_easy_strerror(res));
     return INIT_FAILED;
   }
 
@@ -23,12 +34,15 @@ error simpleHttpInit(request *req) {
   req->curl = curl_easy_init();
 
   if (req->curl == NULL) {
+    DEBUG("Failed to initialize the library. Curl returned a null object\n");
     return INIT_FAILED;
   }
+  DEBUG("Library successfully initialized and ready to use!\n");
   return NO_ERROR;
 }
 
 void simpleHttpClose(request *req, response *res) {
+  DEBUG("Closing Library\n");
   curl_easy_cleanup(req->curl);
   req->curl = NULL;
 
@@ -38,13 +52,29 @@ void simpleHttpClose(request *req, response *res) {
   res->body = NULL;
 
   curl_global_cleanup();
+  DEBUG("Simple HTTP Request library closed\n");
 }
 
 error simpleHttpRequest(request *req, response *res, mediaType type,
                         method verb) {
 
+  DEBUG("Calling simpleHttpRequest\n");
+
   if (req->url == NULL) {
+    DEBUG("No URL. Set the URL in the request object: request.url = {url}\n");
     return NO_URL;
+  }
+
+  DEBUG("Request Object:\n");
+  DEBUG("\tURL: %s\n", req->url);
+  if (req->text) {
+    DEBUG("\tText: %s\n", req->text);
+  }
+  DEBUG("\tNumber of Custom Headers: %d\n", req->numHeaders);
+  DEBUG("\tCustom Headers:\n");
+  if (req->headers) {
+    for (int i = 0; i < req->numHeaders; i++)
+      DEBUG("\t\t%s\n", req->headers[i]);
   }
 
   res->body = NULL;

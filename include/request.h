@@ -147,4 +147,6 @@ void storeResponse(writeBuffer *, response *);
  */
 void setMediaHeaders(request *, mediaType, struct curl_slist *);
 
+void verbosePrint(const char *);
+
 #endif
