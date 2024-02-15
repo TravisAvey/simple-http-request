@@ -19,10 +19,10 @@ static size_t writeCallback(void *, size_t, size_t, void *);
 static size_t readCallback(char *, size_t, size_t, void *);
 
 error simpleHttpInit(request *req) {
-  DEBUG("Initializng library...\n");
+  DEBUG("Initializng library...");
   CURLcode res = curl_global_init(CURL_GLOBAL_DEFAULT);
   if (res != CURLE_OK) {
-    DEBUG("Something went wront initializing library: %s\n",
+    DEBUG("Something went wront initializing library: %s",
           curl_easy_strerror(res));
     return INIT_FAILED;
   }
@@ -34,15 +34,15 @@ error simpleHttpInit(request *req) {
   req->curl = curl_easy_init();
 
   if (req->curl == NULL) {
-    DEBUG("Failed to initialize the library. Curl returned a null object\n");
+    DEBUG("Failed to initialize the library. Curl returned a null object");
     return INIT_FAILED;
   }
-  DEBUG("Library successfully initialized and ready to use!\n");
+  DEBUG("Library successfully initialized and ready to use!");
   return NO_ERROR;
 }
 
 void simpleHttpClose(request *req, response *res) {
-  DEBUG("Closing Library\n");
+  DEBUG("Closing Library");
   curl_easy_cleanup(req->curl);
   req->curl = NULL;
 
@@ -52,29 +52,29 @@ void simpleHttpClose(request *req, response *res) {
   res->body = NULL;
 
   curl_global_cleanup();
-  DEBUG("Simple HTTP Request library closed\n");
+  DEBUG("Simple HTTP Request library closed");
 }
 
 error simpleHttpRequest(request *req, response *res, mediaType type,
                         method verb) {
 
-  DEBUG("Calling simpleHttpRequest\n");
+  DEBUG("Calling simpleHttpRequest");
 
   if (req->url == NULL) {
-    DEBUG("No URL. Set the URL in the request object: request.url = {url}\n");
+    DEBUG("No URL. Set the URL in the request object: request.url = {url}");
     return NO_URL;
   }
 
-  DEBUG("Request Object:\n");
-  DEBUG("\tURL: %s\n", req->url);
+  DEBUG("Request Object:");
+  DEBUG("\tURL: %s", req->url);
   if (req->text) {
-    DEBUG("\tText: %s\n", req->text);
+    DEBUG("\tText: %s", req->text);
   }
-  DEBUG("\tNumber of Custom Headers: %d\n", req->numHeaders);
-  DEBUG("\tCustom Headers:\n");
+  DEBUG("\tNumber of Custom Headers: %d", req->numHeaders);
+  DEBUG("\tCustom Headers:");
   if (req->headers) {
     for (int i = 0; i < req->numHeaders; i++)
-      DEBUG("\t\t%s\n", req->headers[i]);
+      DEBUG("\t\t%s", req->headers[i]);
   }
 
   res->body = NULL;
@@ -86,7 +86,7 @@ error simpleHttpRequest(request *req, response *res, mediaType type,
     readBuffer buffer;
     buffer.readPtr = req->text;
     buffer.size = strlen(req->text);
-    DEBUG("Setting a Read Buffer with text: %s\n\twith a size of: %ld\n",
+    DEBUG("Setting a Read Buffer with text: %s\n\twith a size of: %ld",
           req->text, buffer.size);
     curl_easy_setopt(req->curl, CURLOPT_READFUNCTION, readCallback);
     curl_easy_setopt(req->curl, CURLOPT_READDATA, &buffer);
@@ -119,14 +119,14 @@ error simpleHttpRequest(request *req, response *res, mediaType type,
 void simpleHttpSetPassword(request *req, const char *userpass, digest dig) {
 
   if (userpass != NULL) {
-    DEBUG("Setting username and password: %s\n", userpass);
+    DEBUG("Setting username and password: %s", userpass);
     curl_easy_setopt(req->curl, CURLOPT_USERPWD, userpass);
     if (dig == DIGEST) {
-      DEBUG("Setting HTTP Auth Digest on\n");
+      DEBUG("Setting HTTP Auth Digest on");
       curl_easy_setopt(req->curl, CURLOPT_HTTPAUTH, (long)CURLAUTH_DIGEST);
     }
   } else {
-    DEBUG("username and password is empty\n");
+    DEBUG("username and password is empty");
   }
 }
 
@@ -186,34 +186,34 @@ static size_t readCallback(char *dest, size_t size, size_t nmemb, void *userp) {
 }
 
 void setOpts(request *req, writeBuffer *chunk) {
-  DEBUG("Setting Request Options\n");
+  DEBUG("Setting Request Options");
 
   // get the agent from lubcurl
   char agent[1024] = {0};
   snprintf(agent, sizeof agent, "libcurl/%s",
            curl_version_info(CURLVERSION_NOW)->version);
   agent[sizeof agent - 1] = 0;
-  DEBUG("\tsetting agent: %s\n", agent);
+  DEBUG("\tsetting agent: %s", agent);
   curl_easy_setopt(req->curl, CURLOPT_USERAGENT, agent);
 
   // set the URL option
   curl_easy_setopt(req->curl, CURLOPT_URL, req->url);
-  DEBUG("\tsetting url: %s\n", req->url);
+  DEBUG("\tsetting url: %s", req->url);
 
   // options that are standard for requests
   curl_easy_setopt(req->curl, CURLOPT_BUFFERSIZE, 102400L);
-  DEBUG("\tsetting buffer size to 102400L\n");
+  DEBUG("\tsetting buffer size to 102400L");
   curl_easy_setopt(req->curl, CURLOPT_NOPROGRESS, 1L);
   DEBUG("\tsetting no progress on");
   curl_easy_setopt(req->curl, CURLOPT_MAXREDIRS, 50L);
-  DEBUG("\tsetting max redirects to 50\n");
+  DEBUG("\tsetting max redirects to 50");
   curl_easy_setopt(req->curl, CURLOPT_HTTP_VERSION,
                    (long)CURL_HTTP_VERSION_2TLS);
-  DEBUG("\tsetting HTTP version to 2 (HTTPS)\n");
+  DEBUG("\tsetting HTTP version to 2 (HTTPS)");
   curl_easy_setopt(req->curl, CURLOPT_FTP_SKIP_PASV_IP, 1L);
-  DEBUG("\tsetting FTP skip (FTP SSL)\n");
+  DEBUG("\tsetting FTP skip (FTP SSL)");
   curl_easy_setopt(req->curl, CURLOPT_TCP_KEEPALIVE, 1L);
-  DEBUG("\tsetting TCP keepalive\n");
+  DEBUG("\tsetting TCP keepalive");
 
   // curl options to save the response text
   curl_easy_setopt(req->curl, CURLOPT_WRITEFUNCTION, writeCallback);
@@ -234,70 +234,72 @@ void setMediaHeaders(request *req, mediaType type, struct curl_slist *headers) {
   if (req->text)
     curl_easy_setopt(req->curl, CURLOPT_POSTFIELDS, req->text);
 
-  DEBUG("charset: utf-8\n");
+  DEBUG("charset: utf-8");
   headers = curl_slist_append(headers, "charset: utf-8");
 
   switch (type) {
   case CSV:
-    DEBUG("Accept: text/csv\n");
-    DEBUG("Content-Type: text/csv\n");
+    DEBUG("Accept: text/csv");
+    DEBUG("Content-Type: text/csv");
     headers = curl_slist_append(headers, "Accept: text/csv");
     headers = curl_slist_append(headers, "Content-Type: text/csv");
     break;
   case JSON:
-    DEBUG("Accept: application/json\n");
-    DEBUG("Content-Type: application/json\n");
+    DEBUG("Accept: application/json");
+    DEBUG("Content-Type: application/json");
     headers = curl_slist_append(headers, "Accept: application/json");
     headers = curl_slist_append(headers, "Content-Type: application/json");
     break;
   case XML:
-    DEBUG("Accept: text/xml\n");
-    DEBUG("Content-Type: text/xml\n");
+    DEBUG("Accept: text/xml");
+    DEBUG("Content-Type: text/xml");
     headers = curl_slist_append(headers, "Accept: text/xml");
     headers = curl_slist_append(headers, "Content-Type: text/xml");
     break;
   case HTML:
-    DEBUG("Accept: text/html\n");
-    DEBUG("Content-Type: text/html\n");
+    DEBUG("Accept: text/html");
+    DEBUG("Content-Type: text/html");
     headers = curl_slist_append(headers, "Accept: text/html");
     headers = curl_slist_append(headers, "Content-Type: text/html");
     break;
   case TEXT:
   default:
-    DEBUG("Accept: text/plain\n");
-    DEBUG("Content-Type: text/plain\n");
+    DEBUG("Accept: text/plain");
+    DEBUG("Content-Type: text/plain");
     headers = curl_slist_append(headers, "Accept: text/plain");
     headers = curl_slist_append(headers, "Content-Type: text/plain");
     break;
   }
 
   curl_easy_setopt(req->curl, CURLOPT_HTTPHEADER, headers);
-  DEBUG("Media headers set.\n");
+  DEBUG("Media headers set.");
 }
 
 void setMethod(request *req, method verb) {
   DEBUG("Setting HTTP Request method: ");
   if (verb == POST) {
-    DEBUG("POST\n");
+    DEBUG("POST");
     curl_easy_setopt(req->curl, CURLOPT_POST, 1L);
   } else if (verb == PATCH) {
-    DEBUG("PATCH\n");
+    DEBUG("PATCH");
     curl_easy_setopt(req->curl, CURLOPT_CUSTOMREQUEST, "PATCH");
   } else if (verb == PUT) {
-    DEBUG("PUT\n");
+    DEBUG("PUT");
     curl_easy_setopt(req->curl, CURLOPT_CUSTOMREQUEST, "PUT");
   } else if (verb == DELETE) {
-    DEBUG("DELETE\n");
+    DEBUG("DELETE");
     curl_easy_setopt(req->curl, CURLOPT_CUSTOMREQUEST, "DELETE");
   } else if (verb == GET) {
-    DEBUG("GET\n");
+    DEBUG("GET");
     curl_easy_setopt(req->curl, CURLOPT_CUSTOMREQUEST, "GET");
   }
 }
 
 void setCustomHeaders(request *req, struct curl_slist *headers) {
 
+  DEBUG("Settin custom headers:");
   for (int i = 0; i < req->numHeaders; i++) {
+    DEBUG("%s", req->headers[i]);
     headers = curl_slist_append(headers, req->headers[i]);
   }
 }
