@@ -8,8 +8,7 @@
 
 #ifdef VERBOSE
 #define DEBUG(x, args...)                                                      \
-  fprintf(stderr, " [%s(), %s:%u]\n" x, __FUNCTION__, __FILE__, __LINE__,      \
-          ##args)
+  fprintf(stderr, "  %s:%u\n" x, __FILE__, __LINE__, ##args)
 #else
 #define DEBUG(x, args...)
 #endif
@@ -37,7 +36,7 @@ error simpleHttpInit(request *req) {
     DEBUG("Failed to initialize the library. Curl returned a null object");
     return INIT_FAILED;
   }
-  DEBUG("Library successfully initialized and ready to use!");
+  DEBUG("Library successfully initialized and ready to use!\n");
   return NO_ERROR;
 }
 
@@ -52,7 +51,7 @@ void simpleHttpClose(request *req, response *res) {
   res->body = NULL;
 
   curl_global_cleanup();
-  DEBUG("Simple HTTP Request library closed");
+  DEBUG("Simple HTTP Request library closed\n");
 }
 
 error simpleHttpRequest(request *req, response *res, mediaType type,
@@ -66,12 +65,12 @@ error simpleHttpRequest(request *req, response *res, mediaType type,
   }
 
   DEBUG("Request Object:");
-  DEBUG("\tURL: %s", req->url);
+  DEBUG("URL: %s", req->url);
   if (req->text) {
-    DEBUG("\tText: %s", req->text);
+    DEBUG("Text: %s", req->text);
   }
-  DEBUG("\tNumber of Custom Headers: %d", req->numHeaders);
-  DEBUG("\tCustom Headers:");
+  DEBUG("Number of Custom Headers: %d", req->numHeaders);
+  DEBUG("Custom Headers:");
   if (req->headers) {
     for (int i = 0; i < req->numHeaders; i++)
       DEBUG("\t\t%s", req->headers[i]);
@@ -86,8 +85,8 @@ error simpleHttpRequest(request *req, response *res, mediaType type,
     readBuffer buffer;
     buffer.readPtr = req->text;
     buffer.size = strlen(req->text);
-    DEBUG("Setting a Read Buffer with text: %s\n\twith a size of: %ld",
-          req->text, buffer.size);
+    DEBUG("Setting a Read Buffer with text: %s\nwith a size of: %ld", req->text,
+          buffer.size);
     curl_easy_setopt(req->curl, CURLOPT_READFUNCTION, readCallback);
     curl_easy_setopt(req->curl, CURLOPT_READDATA, &buffer);
   }
@@ -102,17 +101,24 @@ error simpleHttpRequest(request *req, response *res, mediaType type,
 
   setMediaHeaders(req, type, headers);
 
+  DEBUG("Performing request...");
   CURLcode curlRes = curl_easy_perform(req->curl);
 
   if (curlRes != CURLE_OK) {
+    DEBUG("Request failed: %s", curl_easy_strerror(curlRes));
     return REQUEST_FAILED;
+  } else {
+    DEBUG("Request succeeded: %s", curl_easy_strerror(curlRes));
   }
 
+  DEBUG("Freeing all headers");
   curl_slist_free_all(headers);
 
   curl_easy_getinfo(req->curl, CURLINFO_RESPONSE_CODE, &res->code);
+  DEBUG("Server responded with code: %ld", res->code);
 
   storeResponse(&chunk, res);
+  DEBUG("Successfully completed the request");
   return NO_ERROR;
 }
 
@@ -221,9 +227,11 @@ void setOpts(request *req, writeBuffer *chunk) {
 }
 
 void storeResponse(writeBuffer *chunk, response *res) {
+  DEBUG("Storing response body from server into response struct");
   res->body = malloc(strlen(chunk->data) + 1);
   strcpy(res->body, chunk->data);
   free(chunk->data);
+  DEBUG("Response body stored");
 }
 
 void setMediaHeaders(request *req, mediaType type, struct curl_slist *headers) {
