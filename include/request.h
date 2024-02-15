@@ -23,8 +23,8 @@ typedef enum {
 
 typedef struct request {
   CURL *curl;           // The CURL object
-  char *url;            // The URL; where to send the request
-  char *text;           // The text data to be sent
+  const char *url;      // The URL; where to send the request
+  const char *text;     // The text data to be sent
   const char **headers; // An array of custom headers
   int numHeaders;       // The number of custom headers
 } request;
@@ -97,7 +97,7 @@ error simpleHttpRequest(request *, response *, mediaType, method);
  *  @dig if digest auth is needed (set DIGEST), else set as NONE
  *
  */
-void simpleHttpSetPassword(request *, char *, digest);
+void simpleHttpSetPassword(request *, const char *, digest);
 
 /*
  *  Returs the error code as a helpful string
@@ -106,7 +106,7 @@ void simpleHttpSetPassword(request *, char *, digest);
  *
  *  @return the error as a string
  */
-char *simpleHttpErrorString(error);
+const char *simpleHttpErrorString(error);
 
 /*
  *   Sets the custom headers to the request
@@ -115,17 +115,6 @@ char *simpleHttpErrorString(error);
  *   @headers the slist object to add the headers to
  */
 void setCustomHeaders(request *, struct curl_slist *);
-
-/*
- *  The callback for receiving data from a request
- */
-static size_t writeCallback(void *, size_t, size_t, void *);
-
-/*
- *  The callback used for sending data on a request
- *
- */
-static size_t readCallback(char *, size_t, size_t, void *);
 
 /*
  *   Sets the HTTP Method 'Verb' for the request
