@@ -86,6 +86,8 @@ error simpleHttpRequest(request *req, response *res, mediaType type,
     readBuffer buffer;
     buffer.readPtr = req->text;
     buffer.size = strlen(req->text);
+    DEBUG("Setting a Read Buffer with text: %s\n\twith a size of: %ld\n",
+          req->text, buffer.size);
     curl_easy_setopt(req->curl, CURLOPT_READFUNCTION, readCallback);
     curl_easy_setopt(req->curl, CURLOPT_READDATA, &buffer);
   }
@@ -117,10 +119,14 @@ error simpleHttpRequest(request *req, response *res, mediaType type,
 void simpleHttpSetPassword(request *req, const char *userpass, digest dig) {
 
   if (userpass != NULL) {
+    DEBUG("Setting username and password: %s\n", userpass);
     curl_easy_setopt(req->curl, CURLOPT_USERPWD, userpass);
     if (dig == DIGEST) {
+      DEBUG("Setting HTTP Auth Digest on\n");
       curl_easy_setopt(req->curl, CURLOPT_HTTPAUTH, (long)CURLAUTH_DIGEST);
     }
+  } else {
+    DEBUG("username and password is empty\n");
   }
 }
 
@@ -180,25 +186,34 @@ static size_t readCallback(char *dest, size_t size, size_t nmemb, void *userp) {
 }
 
 void setOpts(request *req, writeBuffer *chunk) {
+  DEBUG("Setting Request Options\n");
 
   // get the agent from lubcurl
   char agent[1024] = {0};
   snprintf(agent, sizeof agent, "libcurl/%s",
            curl_version_info(CURLVERSION_NOW)->version);
   agent[sizeof agent - 1] = 0;
+  DEBUG("\tsetting agent: %s\n", agent);
   curl_easy_setopt(req->curl, CURLOPT_USERAGENT, agent);
 
   // set the URL option
   curl_easy_setopt(req->curl, CURLOPT_URL, req->url);
+  DEBUG("\tsetting url: %s\n", req->url);
 
   // options that are standard for requests
   curl_easy_setopt(req->curl, CURLOPT_BUFFERSIZE, 102400L);
+  DEBUG("\tsetting buffer size to 102400L\n");
   curl_easy_setopt(req->curl, CURLOPT_NOPROGRESS, 1L);
+  DEBUG("\tsetting no progress on");
   curl_easy_setopt(req->curl, CURLOPT_MAXREDIRS, 50L);
+  DEBUG("\tsetting max redirects to 50\n");
   curl_easy_setopt(req->curl, CURLOPT_HTTP_VERSION,
                    (long)CURL_HTTP_VERSION_2TLS);
+  DEBUG("\tsetting HTTP version to 2 (HTTPS)\n");
   curl_easy_setopt(req->curl, CURLOPT_FTP_SKIP_PASV_IP, 1L);
+  DEBUG("\tsetting FTP skip (FTP SSL)\n");
   curl_easy_setopt(req->curl, CURLOPT_TCP_KEEPALIVE, 1L);
+  DEBUG("\tsetting TCP keepalive\n");
 
   // curl options to save the response text
   curl_easy_setopt(req->curl, CURLOPT_WRITEFUNCTION, writeCallback);
@@ -212,52 +227,72 @@ void storeResponse(writeBuffer *chunk, response *res) {
 }
 
 void setMediaHeaders(request *req, mediaType type, struct curl_slist *headers) {
+  DEBUG("Setting Media Headers: ");
 
   // check if request.text contains data
   // if not, setting headers for return type
   if (req->text)
     curl_easy_setopt(req->curl, CURLOPT_POSTFIELDS, req->text);
 
+  DEBUG("charset: utf-8\n");
   headers = curl_slist_append(headers, "charset: utf-8");
 
   switch (type) {
   case CSV:
+    DEBUG("Accept: text/csv\n");
+    DEBUG("Content-Type: text/csv\n");
     headers = curl_slist_append(headers, "Accept: text/csv");
     headers = curl_slist_append(headers, "Content-Type: text/csv");
     break;
   case JSON:
+    DEBUG("Accept: application/json\n");
+    DEBUG("Content-Type: application/json\n");
     headers = curl_slist_append(headers, "Accept: application/json");
     headers = curl_slist_append(headers, "Content-Type: application/json");
     break;
   case XML:
+    DEBUG("Accept: text/xml\n");
+    DEBUG("Content-Type: text/xml\n");
     headers = curl_slist_append(headers, "Accept: text/xml");
     headers = curl_slist_append(headers, "Content-Type: text/xml");
     break;
   case HTML:
+    DEBUG("Accept: text/html\n");
+    DEBUG("Content-Type: text/html\n");
     headers = curl_slist_append(headers, "Accept: text/html");
     headers = curl_slist_append(headers, "Content-Type: text/html");
     break;
   case TEXT:
   default:
+    DEBUG("Accept: text/plain\n");
+    DEBUG("Content-Type: text/plain\n");
     headers = curl_slist_append(headers, "Accept: text/plain");
     headers = curl_slist_append(headers, "Content-Type: text/plain");
     break;
   }
 
   curl_easy_setopt(req->curl, CURLOPT_HTTPHEADER, headers);
+  DEBUG("Media headers set.\n");
 }
 
 void setMethod(request *req, method verb) {
-  if (verb == POST)
+  DEBUG("Setting HTTP Request method: ");
+  if (verb == POST) {
+    DEBUG("POST\n");
     curl_easy_setopt(req->curl, CURLOPT_POST, 1L);
-  else if (verb == PATCH)
+  } else if (verb == PATCH) {
+    DEBUG("PATCH\n");
     curl_easy_setopt(req->curl, CURLOPT_CUSTOMREQUEST, "PATCH");
-  else if (verb == PUT)
+  } else if (verb == PUT) {
+    DEBUG("PUT\n");
     curl_easy_setopt(req->curl, CURLOPT_CUSTOMREQUEST, "PUT");
-  else if (verb == DELETE)
+  } else if (verb == DELETE) {
+    DEBUG("DELETE\n");
     curl_easy_setopt(req->curl, CURLOPT_CUSTOMREQUEST, "DELETE");
-  else if (verb == GET)
+  } else if (verb == GET) {
+    DEBUG("GET\n");
     curl_easy_setopt(req->curl, CURLOPT_CUSTOMREQUEST, "GET");
+  }
 }
 
 void setCustomHeaders(request *req, struct curl_slist *headers) {
