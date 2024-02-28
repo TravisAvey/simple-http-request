@@ -80,8 +80,8 @@ error simpleHttpRequest(request *req, response *res, mediaType type,
 
   setMethod(req, verb);
 
-  // only if patch, post, put..
-  if (verb != GET && verb != DELETE) {
+  // only if we have text to send
+  if (req->text && verb != GET && verb != DELETE) {
     readBuffer buffer;
     buffer.readPtr = req->text;
     buffer.size = strlen(req->text);
