@@ -62,11 +62,18 @@ MU_TEST(GetAuthRequest) {
   mu_assert_string_eq(expectedRes, res.body);
 }
 
+MU_TEST(GetNoUrl) {
+
+  error err = simpleHttpRequest(&req, &res, TEXT, GET);
+  mu_assert(err == NO_URL, "GET request did not return NO_URL");
+}
+
 MU_TEST_SUITE(GetTestSuite) {
   MU_SUITE_CONFIGURE(&setup, &teardown);
 
   MU_RUN_TEST(GetRequest);
   MU_RUN_TEST(GetAuthRequest);
+  MU_RUN_TEST(GetNoUrl);
 }
 
 MU_TEST(PostRequest) {
