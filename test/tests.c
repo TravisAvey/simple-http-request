@@ -1,13 +1,10 @@
 #include "../include/request.h"
 #include "minunit/minunit.h"
+#include "util/readfile.h"
 #include <string.h>
 
-const char *getUrl =
-    "https://gist.githubusercontent.com/TravisAvey/"
-    "d567afe00fa20535b9762f353b446b9b/raw/"
-    "8772c6779f935201fd934975eb636c8726e26112/simpleHttpRequest.txt";
-
-const char *postUrl = "https://httpbin.org/response-headers?freeform=testing";
+const char *getUrl = "https://8r7q4.wiremockapi.cloud/get/1";
+const char *postUrl = "https://8r7q4.wiremockapi.cloud/json";
 const char *putUrl = "https://httpbin.org/put";
 const char *patchUrl = "https://httpbin.org/patch";
 const char *deleteUrl = "https://httpbin.org/delete";
@@ -43,8 +40,7 @@ MU_TEST(GetRequest) {
   error err = simpleHttpRequest(&req, &res, TEXT, GET);
   mu_assert(err == NO_ERROR, "GET request returned an error");
   mu_assert(res.code == 200, "GET request did not return 200");
-  mu_assert(strstr(res.body, "this is a test for a basic get request") != NULL,
-            "GET request did not return expected body");
+  mu_assert_string_eq(res.body, "here is some text");
 }
 
 MU_TEST_SUITE(GetTestSuite) {
@@ -55,13 +51,15 @@ MU_TEST_SUITE(GetTestSuite) {
 
 MU_TEST(PostRequest) {
   req.url = postUrl;
-  const char *expectedRes = "{\"Content-Length\": \"92\", \"Content-Type\": "
-                            "\"application/json\",\"freeform\": \"hello\" }";
+  req.text = "{ \"msg\": \"hello, world\" }";
+
+  const char *expectedRes = readFile("post.txt");
+
   error err = simpleHttpRequest(&req, &res, JSON, POST);
+
   mu_assert(err == NO_ERROR, "POST request returned an error");
-  mu_assert(res.code == 200, "POST request did not return 200");
-  mu_assert(strstr(res.body, expectedRes) != NULL,
-            "POST request did not return expected response body");
+  mu_assert(res.code == 201, "POST request did not return 201");
+  mu_assert_string_eq(expectedRes, res.body);
 }
 
 MU_TEST_SUITE(PostTestSuite) {
