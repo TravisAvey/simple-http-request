@@ -3,6 +3,7 @@
 
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 
 const char *readFile(const char *filename) {
   FILE *file = fopen(filename, "r");
@@ -12,17 +13,19 @@ const char *readFile(const char *filename) {
   }
 
   fseek(file, 0, SEEK_END);
-
   int length = ftell(file);
 
   fseek(file, 0, SEEK_SET);
 
-  char *string = (char *)malloc(sizeof(char) * (length + 1));
+  // char[256] -- may need to increase this at some point
+  char *string = (char *)calloc(length + 1, sizeof(char) * (length + 1));
+  if (string == NULL) {
+    free(string);
+    return NULL;
+  }
 
   char c;
-
   int i = 0;
-
   while ((c = fgetc(file)) != EOF) {
     string[i] = c;
     i++;
