@@ -17,7 +17,6 @@ const char *readFile(const char *filename) {
 
   fseek(file, 0, SEEK_SET);
 
-  // char[256] -- may need to increase this at some point
   char *string = (char *)calloc(length + 1, sizeof(char) * (length + 1));
   if (string == NULL) {
     free(string);

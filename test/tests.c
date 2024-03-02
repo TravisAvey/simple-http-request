@@ -54,7 +54,7 @@ MU_TEST(GetAuthRequest) {
   simpleHttpSetPassword(&req, userpass, DIGEST);
 
   const char *expectedRes = readFile("auth.txt");
-  if (!expectedRes) {
+  if (expectedRes == NULL) {
     mu_fail("Unable to read file: auth.txt to test results");
   }
 
@@ -85,7 +85,7 @@ MU_TEST(PostRequest) {
   req.text = "{ \"msg\": \"hello, world\" }";
 
   const char *expectedRes = readFile("post.txt");
-  if (!expectedRes) {
+  if (expectedRes == NULL) {
     mu_fail("Unable to read file: post.txt to test results");
   }
 
@@ -108,7 +108,7 @@ MU_TEST(PutRequest) {
   req.text = "{ \"name\": \"Jim Halpert\" }";
 
   const char *expectedRes = readFile("put.txt");
-  if (!expectedRes) {
+  if (expectedRes == NULL) {
     mu_fail("Unable to read file: put.txt to test results");
   }
 
@@ -131,7 +131,7 @@ MU_TEST(PatchRequest) {
   req.text = "{ \"address\": \"123 anywhere street\" }";
 
   const char *expectedRes = readFile("put.txt");
-  if (!expectedRes) {
+  if (expectedRes == NULL) {
     mu_fail("Unable to read file: put.txt to test results");
   }
 
@@ -153,7 +153,7 @@ MU_TEST(DeleteRequest) {
   req.url = deleteUrl;
 
   const char *expectedRes = readFile("delete.txt");
-  if (!expectedRes) {
+  if (expectedRes == NULL) {
     mu_fail("Unable to read file: delete.txt to test results");
   }
 
