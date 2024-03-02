@@ -14,11 +14,12 @@ typedef enum { DIGEST, NONE } digest;
 
 // Error types, 0 is no error
 typedef enum {
-  NO_ERROR = 0,      // success
-  INIT_FAILED = 1,   // The initialization of the library failed
-  NO_URL = 2,        // Missing URL for the request
-  NO_MEMORY = 3,     // Couldn't initialize due to not enough memory
-  REQUEST_FAILED = 4 // The request failed -- not a server error
+  NO_ERROR = 0,       // success
+  INIT_FAILED = 1,    // The initialization of the library failed
+  NO_URL = 2,         // Missing URL for the request
+  NO_MEMORY = 3,      // Couldn't initialize due to not enough memory
+  REQUEST_FAILED = 4, // The request failed -- not a server error
+  MEMORY_ERROR = 5    // Error initializing an object, possible memory leak
 } error;
 
 typedef struct request {

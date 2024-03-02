@@ -43,14 +43,15 @@ error simpleHttpInit(request *req) {
 void simpleHttpClose(request *req, response *res) {
   DEBUG("Closing Library");
   curl_easy_cleanup(req->curl);
+  curl_global_cleanup();
   req->curl = NULL;
 
   req->url = NULL;
   req->headers = NULL;
   req->text = NULL;
+  free((void *)res->body);
   res->body = NULL;
 
-  curl_global_cleanup();
   DEBUG("Simple HTTP Request library closed\n");
 }
 
@@ -113,6 +114,8 @@ error simpleHttpRequest(request *req, response *res, mediaType type,
 
   DEBUG("Freeing all headers");
   curl_slist_free_all(headers);
+  free(headers);
+  headers = NULL;
 
   curl_easy_getinfo(req->curl, CURLINFO_RESPONSE_CODE, &res->code);
   DEBUG("Server responded with code: %ld", res->code);
@@ -148,6 +151,8 @@ const char *simpleHttpErrorString(error err) {
     return "The request failed--could not perform the request";
   } else if (err == NO_URL) {
     return "Missing URL. Need a location to perform a request";
+  } else if (err == MEMORY_ERROR) {
+    return "Memory initialization failed. Possible memory leak";
   } else {
     return "Something went wrong.";
   }
@@ -228,7 +233,7 @@ void setOpts(request *req, writeBuffer *chunk) {
 
 void storeResponse(writeBuffer *chunk, response *res) {
   DEBUG("Storing response body from server into response struct");
-  res->body = malloc(strlen(chunk->data) + 1);
+  res->body = calloc(1, strlen(chunk->data) + 1);
   strcpy(res->body, chunk->data);
   free(chunk->data);
   DEBUG("Response body stored");
@@ -305,7 +310,7 @@ void setMethod(request *req, method verb) {
 
 void setCustomHeaders(request *req, struct curl_slist *headers) {
 
-  DEBUG("Settin custom headers:");
+  DEBUG("Setting custom headers:");
   for (int i = 0; i < req->numHeaders; i++) {
     DEBUG("%s", req->headers[i]);
     headers = curl_slist_append(headers, req->headers[i]);
