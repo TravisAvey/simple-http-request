@@ -1,41 +1,31 @@
 # Simple HTTP Request
 
 ## Description
-TODO
-This is a simple library that will perform simple HTTP requests:
+This is a simple HTTP request library that will perform simple HTTP requests:
 
 ```
 GET, POST, PUT, PATCH, DELETE
 ```
 
+### Motivation
+I decided to make this library, OK it's nothing more than a wrapper around libCURL, anyways... I made this because I have other project ideas in mind that would make use of libCURL but wanted a simplier interface.
+
 ## Installation
 ```
 mkdir build
 cd build
-cmake ..
+cmake -DTARGET_GROUP:STRING={release,test,examples} ..
 make
 ```
 
+You can also pass -DVERBOSE=on for debugging purposes (it will print a lot of information).
+
 ## Usage
-TODO
-Show how to import and use library
+Either clone this repo or download a release.
 
-## Support
-TODO
-
-## Roadmap
-TODO
-
-## Contributing
-TODO
 
 ## Authors and acknowledgment
-TODO
-Show your appreciation to those who have contributed to the project.
+I'd like to thank myself for contributing
 
 ## License
 MIT License
-
-## Project status
-TODO
-In progress
