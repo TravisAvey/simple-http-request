@@ -20,6 +20,9 @@ make
 
 You can also pass -DVERBOSE=on for debugging purposes (it will print a lot of information).
 
+Build with your own code
+`gcc main.c -o test -L. -lSimpleHttpRequest -lcurl` 
+
 ## Usage
 Either clone this repo or download a release.
 
