@@ -2,7 +2,7 @@ cmake_minimum_required(VERSION 3.28)
 
 set(CMAKE_C_STANDARD 11)
 
-project(simpleHTTPRequest VERSION 0.1.0)
+project(simpleHTTPRequest VERSION 1.0.0)
 
 # Add debugging option
 option(VERBOSE "Enter debug mode" OFF)
